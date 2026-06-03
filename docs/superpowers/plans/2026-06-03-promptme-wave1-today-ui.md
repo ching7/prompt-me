@@ -94,7 +94,8 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
-final selectedDateProvider = StateProvider<DateTime>((_) {
+// 注：Riverpod 3.x 已移除 StateProvider。此处只读不改，用普通 Provider。
+final selectedDateProvider = Provider<DateTime>((_) {
   final n = DateTime.now();
   return DateTime(n.year, n.month, n.day);
 });
@@ -1130,7 +1131,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   @override
   Widget build(BuildContext context) {
     final viewAsync = ref.watch(todayViewProvider);
-    final streak = ref.watch(streakProvider).valueOrNull ?? 0;
+    final streak = ref.watch(streakProvider).value ?? 0; // Riverpod 3.x 用 .value
     final date = ref.watch(selectedDateProvider);
     final microIds = _collectMicroIds(viewAsync.valueOrNull);
 
