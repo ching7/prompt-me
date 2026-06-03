@@ -13,14 +13,14 @@ void main() {
 
   test('insert, fetch by date, mark done, completion days', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
       scheduledDate: Value(d(3)),
     ));
 
     final todays = await db.taskDao.tasksForDate(d(3));
-    expect(todays.single.title, '农信问题');
+    expect(todays.single.title, '项目周报');
 
     await db.taskDao.markDone(id, d(3, 17));
     final done = await db.taskDao.getById(id);
@@ -32,7 +32,7 @@ void main() {
 
   test('applyDowngrade updates prompt + level', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
     ));

@@ -380,31 +380,31 @@ import 'package:promptme/domain/parsing/feishu_markdown_parser.dart';
 const _sample = '''
 # 0603
 ## 重要紧急
-- [ ] 整理广西农信问题
-  - [ ] 智算定制功能查看与了解
-  - [ ] 星火智能体功能核对
+- [ ] 完成项目周报
+  - [ ] 汇总本周进展
+  - [ ] 整理风险项
 ## 重要非紧急
-- [ ] 郑州银行进度跟踪
+- [ ] 推进读书计划
 # 0602
 ## 重要紧急
-- [x] 整理人员投入情况
+- [x] 晨间锻炼20分钟
 ''';
 
 void main() {
   test('parses dates, quadrants, nesting and done state', () {
     final tasks = FeishuMarkdownParser.parse(_sample, year: 2026);
 
-    final gx = tasks.firstWhere((t) => t.title == '整理广西农信问题');
+    final gx = tasks.firstWhere((t) => t.title == '完成项目周报');
     expect(gx.quadrant, Quadrant.importantUrgent);
     expect(gx.date, DateTime(2026, 6, 3));
     expect(gx.done, isFalse);
     expect(gx.children.map((c) => c.title),
-        ['智算定制功能查看与了解', '星火智能体功能核对']);
+        ['汇总本周进展', '整理风险项']);
 
-    final zz = tasks.firstWhere((t) => t.title == '郑州银行进度跟踪');
+    final zz = tasks.firstWhere((t) => t.title == '推进读书计划');
     expect(zz.quadrant, Quadrant.importantNotUrgent);
 
-    final done = tasks.firstWhere((t) => t.title == '整理人员投入情况');
+    final done = tasks.firstWhere((t) => t.title == '晨间锻炼20分钟');
     expect(done.done, isTrue);
     expect(done.date, DateTime(2026, 6, 2));
   });
@@ -412,8 +412,8 @@ void main() {
   test('only top-level tasks are returned as roots', () {
     final tasks = FeishuMarkdownParser.parse(_sample, year: 2026);
     expect(tasks.map((t) => t.title),
-        containsAll(['整理广西农信问题', '郑州银行进度跟踪', '整理人员投入情况']));
-    expect(tasks.any((t) => t.title == '智算定制功能查看与了解'), isFalse);
+        containsAll(['完成项目周报', '推进读书计划', '晨间锻炼20分钟']));
+    expect(tasks.any((t) => t.title == '汇总本周进展'), isFalse);
   });
 }
 ```
@@ -850,17 +850,17 @@ void main() {
       TodayEvent(title: '复盘', start: DateTime(2026, 6, 3, 9), allDay: false),
     ];
     final tasks = [
-      TodayTask(id: 1, title: '郑州银行', quadrant: Quadrant.importantNotUrgent, done: false),
-      TodayTask(id: 2, title: '农信问题', quadrant: Quadrant.importantUrgent, done: false),
-      TodayTask(id: 3, title: '人员投入', quadrant: Quadrant.importantUrgent, done: true),
+      TodayTask(id: 1, title: '读书计划', quadrant: Quadrant.importantNotUrgent, done: false),
+      TodayTask(id: 2, title: '项目周报', quadrant: Quadrant.importantUrgent, done: false),
+      TodayTask(id: 3, title: '晨间锻炼', quadrant: Quadrant.importantUrgent, done: true),
     ];
 
     final view = TodayAggregator.build(events: events, tasks: tasks);
 
     expect(view.events.first.title, '复盘'); // 按时间排序
-    expect(view.byQuadrant[Quadrant.importantUrgent]!.map((t) => t.title), ['农信问题']);
-    expect(view.byQuadrant[Quadrant.importantNotUrgent]!.map((t) => t.title), ['郑州银行']);
-    expect(view.completed.map((t) => t.title), ['人员投入']);
+    expect(view.byQuadrant[Quadrant.importantUrgent]!.map((t) => t.title), ['项目周报']);
+    expect(view.byQuadrant[Quadrant.importantNotUrgent]!.map((t) => t.title), ['读书计划']);
+    expect(view.completed.map((t) => t.title), ['晨间锻炼']);
     expect(view.doneCount, 1);
     expect(view.totalCount, 3);
   });
@@ -978,20 +978,20 @@ import 'package:promptme/domain/fogg/downgrade.dart';
 
 void main() {
   test('local fallback shrinks deterministically by level', () {
-    final l1 = Downgrade.localFallback('整理广西农信问题', 1);
-    final l2 = Downgrade.localFallback('整理广西农信问题', 2);
+    final l1 = Downgrade.localFallback('完成项目周报', 1);
+    final l2 = Downgrade.localFallback('完成项目周报', 2);
     expect(l1, contains('2 分钟'));
-    expect(l1, contains('整理广西农信问题'));
+    expect(l1, contains('完成项目周报'));
     expect(l1, isNot(equals(l2)));
   });
 
   test('prompt mentions task, reason and fogg factor', () {
     final p = Downgrade.buildPrompt(
-      taskTitle: '整理广西农信问题',
+      taskTitle: '完成项目周报',
       reason: FailureReason.tired,
       level: 1,
     );
-    expect(p, contains('整理广西农信问题'));
+    expect(p, contains('完成项目周报'));
     expect(p, contains('太累'));
     expect(p, contains('A'));
   });
@@ -1069,17 +1069,17 @@ import 'package:promptme/domain/ai/ai_prompts.dart';
 void main() {
   test('prioritize prompt lists tasks and events', () {
     final p = AiPrompts.prioritize(
-      taskTitles: ['农信问题', '郑州银行'],
+      taskTitles: ['项目周报', '读书计划'],
       todayEvents: ['10:00 周报'],
     );
-    expect(p, contains('农信问题'));
-    expect(p, contains('郑州银行'));
+    expect(p, contains('项目周报'));
+    expect(p, contains('读书计划'));
     expect(p, contains('周报'));
     expect(p, contains('四象限'));
   });
 
   test('review prompt lists overdue descriptions', () {
-    final p = AiPrompts.review(overdueDescriptions: ['农信问题（被推迟3次，重要紧急）']);
+    final p = AiPrompts.review(overdueDescriptions: ['项目周报（被推迟3次，重要紧急）']);
     expect(p, contains('被推迟3次'));
   });
 }
@@ -1100,23 +1100,23 @@ void main() {
 ```json
 {
   "suggestions": [
-    {"task": "农信问题", "quadrant": "重要紧急", "reason": "今天有deadline"}
+    {"task": "项目周报", "quadrant": "重要紧急", "reason": "今天有deadline"}
   ],
-  "todayFocus": ["农信问题"]
+  "todayFocus": ["项目周报"]
 }
 ```
 ''';
     final r = AiResponseParser.parsePrioritize(raw);
-    expect(r.suggestions.single.taskTitle, '农信问题');
+    expect(r.suggestions.single.taskTitle, '项目周报');
     expect(r.suggestions.single.quadrant, Quadrant.importantUrgent);
-    expect(r.todayFocus, ['农信问题']);
+    expect(r.todayFocus, ['项目周报']);
   });
 
   test('parses review JSON array', () {
     const raw =
-        '[{"task":"农信问题","diagnosis":"任务太大","fogg":"A","suggestion":"拆成2分钟"}]';
+        '[{"task":"项目周报","diagnosis":"任务太大","fogg":"A","suggestion":"拆成2分钟"}]';
     final items = AiResponseParser.parseReview(raw);
-    expect(items.single.taskTitle, '农信问题');
+    expect(items.single.taskTitle, '项目周报');
     expect(items.single.foggFactor, 'A');
     expect(items.single.suggestion, '拆成2分钟');
   });
@@ -1462,14 +1462,14 @@ void main() {
 
   test('insert, fetch by date, mark done, completion days', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
       scheduledDate: Value(d(3)),
     ));
 
     final todays = await db.taskDao.tasksForDate(d(3));
-    expect(todays.single.title, '农信问题');
+    expect(todays.single.title, '项目周报');
 
     await db.taskDao.markDone(id, d(3, 17));
     final done = await db.taskDao.getById(id);
@@ -1481,7 +1481,7 @@ void main() {
 
   test('applyDowngrade updates prompt + level', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
     ));
@@ -1549,7 +1549,7 @@ void main() {
 
   test('logs done and too_hard events with reason', () async {
     final taskId = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
     ));

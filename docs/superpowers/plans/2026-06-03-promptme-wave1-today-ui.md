@@ -59,12 +59,12 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.manual,
     ));
     var row = await db.taskDao.getById(id);
-    expect(rowToTodayTask(row!).title, '农信问题');
+    expect(rowToTodayTask(row!).title, '项目周报');
 
     await db.taskDao.applyDowngrade(id, '只看一眼清单', 1);
     row = await db.taskDao.getById(id);
@@ -175,12 +175,12 @@ git commit -m "feat: riverpod providers + row->VM mappers"
 
     test('addTask schedules for today with manual source', () async {
       await c.read(todayControllerProvider).addTask(
-            title: '农信问题',
+            title: '项目周报',
             quadrant: Quadrant.importantUrgent,
           );
       final today = DateTime.now();
       final rows = await db.taskDao.tasksForDate(today);
-      expect(rows.single.title, '农信问题');
+      expect(rows.single.title, '项目周报');
       expect(rows.single.source, TaskSource.manual);
     });
 
@@ -194,9 +194,9 @@ git commit -m "feat: riverpod providers + row->VM mappers"
 
     test('tooHard shrinks, bumps level, logs reason', () async {
       final id = await db.taskDao.insertTask(TasksCompanion.insert(
-        title: '整理农信问题', quadrant: Quadrant.importantUrgent, source: TaskSource.manual));
+        title: '完成项目周报', quadrant: Quadrant.importantUrgent, source: TaskSource.manual));
       final micro = await c.read(todayControllerProvider).tooHard(id, FailureReason.tired);
-      expect(micro, contains('整理农信问题'));
+      expect(micro, contains('完成项目周报'));
       final row = await db.taskDao.getById(id);
       expect(row!.downgradeLevel, 1);
       expect(row.currentPromptText, micro);
@@ -1015,7 +1015,7 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
             controller: _ctrl,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: '例如：整理农信问题',
+              hintText: '例如：完成项目周报',
               filled: true,
               fillColor: AppColors.card,
               border: OutlineInputBorder(
@@ -1351,7 +1351,7 @@ void main() {
   }
 
   Future<int> seedTask() => db.taskDao.insertTask(TasksCompanion.insert(
-        title: '整理农信问题',
+        title: '完成项目周报',
         quadrant: Quadrant.importantUrgent,
         source: TaskSource.manual,
         scheduledDate: Value(DateTime(
@@ -1361,7 +1361,7 @@ void main() {
   testWidgets('tapping 我做到了 marks task done', (tester) async {
     final id = await seedTask();
     await pump(tester);
-    expect(find.text('整理农信问题'), findsOneWidget);
+    expect(find.text('完成项目周报'), findsOneWidget);
 
     await tester.tap(find.text('我做到了'));
     await tester.pump(); // 触发 complete

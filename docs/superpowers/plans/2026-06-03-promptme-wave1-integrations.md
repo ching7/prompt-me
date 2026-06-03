@@ -195,10 +195,10 @@ import 'package:promptme/domain/import/feishu_importer.dart';
 const _md = '''
 # 0603
 ## 重要紧急
-- [ ] 整理广西农信问题
-  - [ ] 智算定制功能查看与了解
+- [ ] 完成项目周报
+  - [ ] 汇总本周进展
 ## 重要非紧急
-- [x] 郑州银行进度跟踪
+- [x] 推进读书计划
 ''';
 
 void main() {
@@ -211,14 +211,14 @@ void main() {
     expect(count, 3);
 
     final rows = await db.taskDao.tasksForDate(DateTime(2026, 6, 3));
-    final parent = rows.firstWhere((t) => t.title == '整理广西农信问题');
+    final parent = rows.firstWhere((t) => t.title == '完成项目周报');
     expect(parent.quadrant, Quadrant.importantUrgent);
     expect(parent.source, TaskSource.feishu);
 
-    final child = rows.firstWhere((t) => t.title == '智算定制功能查看与了解');
+    final child = rows.firstWhere((t) => t.title == '汇总本周进展');
     expect(child.parentTaskId, parent.id);
 
-    final done = rows.firstWhere((t) => t.title == '郑州银行进度跟踪');
+    final done = rows.firstWhere((t) => t.title == '推进读书计划');
     expect(done.status, TaskStatus.done);
     expect(done.quadrant, Quadrant.importantNotUrgent);
   });
@@ -329,7 +329,7 @@ void main() {
       return http.Response(
         jsonEncode({
           'content': [
-            {'type': 'text', 'text': '{"suggestions":[{"task":"农信问题","quadrant":"重要紧急","reason":"今天deadline"}],"todayFocus":["农信问题"]}'}
+            {'type': 'text', 'text': '{"suggestions":[{"task":"项目周报","quadrant":"重要紧急","reason":"今天deadline"}],"todayFocus":["项目周报"]}'}
           ]
         }),
         200,
@@ -340,7 +340,7 @@ void main() {
       config: const AiConfig(provider: AiProvider.claude, apiKey: 'sk-test'),
       client: client,
     );
-    final r = await ai.prioritize(taskTitles: ['农信问题'], todayEvents: []);
+    final r = await ai.prioritize(taskTitles: ['项目周报'], todayEvents: []);
     expect(r.suggestions.single.quadrant, Quadrant.importantUrgent);
   });
 
@@ -350,7 +350,7 @@ void main() {
       return http.Response(
         utf8.encode(jsonEncode({
           'choices': [
-            {'message': {'content': '只打开农信问题清单，写一句话。'}}
+            {'message': {'content': '只打开周报文档，写一句话。'}}
           ]
         })),
         200,
@@ -365,8 +365,8 @@ void main() {
       client: client,
     );
     final micro = await ai.downgrade(
-        taskTitle: '农信问题', reason: FailureReason.tired, level: 1);
-    expect(micro.trim(), '只打开农信问题清单，写一句话。');
+        taskTitle: '项目周报', reason: FailureReason.tired, level: 1);
+    expect(micro.trim(), '只打开周报文档，写一句话。');
   });
 }
 ```
@@ -905,7 +905,7 @@ git commit -m "feat: settings screen (subscription/feishu/AI) + entry"
 ```dart
 import 'integration_providers.dart';
 ```
-> 说明：AI 不可用/未配置/异常 → 自动退回计划②的本地兜底，闭环不中断（spec §12 错误处理）。`today_controller_test.dart` 因 `aiConfig.isConfigured` 为空 key 时为 false，仍走本地兜底，原断言 `contains('整理农信问题')` 继续成立。
+> 说明：AI 不可用/未配置/异常 → 自动退回计划②的本地兜底，闭环不中断（spec §12 错误处理）。`today_controller_test.dart` 因 `aiConfig.isConfigured` 为空 key 时为 false，仍走本地兜底，原断言 `contains('完成项目周报')` 继续成立。
 
 - [ ] **Step 2: AiPanel（整理今日 / 复盘结果展示）**
 

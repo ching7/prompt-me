@@ -29,7 +29,7 @@ void main() {
   }
 
   Future<int> seedTask() => db.taskDao.insertTask(TasksCompanion.insert(
-        title: '整理农信问题',
+        title: '完成项目周报',
         quadrant: Quadrant.importantUrgent,
         source: TaskSource.manual,
         scheduledDate: Value(DateTime(
@@ -39,7 +39,7 @@ void main() {
   testWidgets('tapping 我做到了 marks task done', (tester) async {
     final id = await seedTask();
     await pump(tester);
-    expect(find.text('整理农信问题'), findsOneWidget);
+    expect(find.text('完成项目周报'), findsOneWidget);
 
     await tester.tap(find.text('我做到了'));
     await tester.pump(); // 触发 complete

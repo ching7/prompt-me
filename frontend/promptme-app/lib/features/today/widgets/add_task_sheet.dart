@@ -52,7 +52,7 @@ class _AddTaskSheetState extends State<_AddTaskSheet> {
             controller: _ctrl,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: '例如：整理农信问题',
+              hintText: '例如：完成项目周报',
               filled: true,
               fillColor: AppColors.card,
               border: OutlineInputBorder(

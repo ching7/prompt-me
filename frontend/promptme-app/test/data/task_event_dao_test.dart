@@ -11,7 +11,7 @@ void main() {
 
   test('logs done and too_hard events with reason', () async {
     final taskId = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '农信问题',
+      title: '项目周报',
       quadrant: Quadrant.importantUrgent,
       source: TaskSource.feishu,
     ));

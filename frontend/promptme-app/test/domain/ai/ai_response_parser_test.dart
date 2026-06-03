@@ -9,23 +9,23 @@ void main() {
 ```json
 {
   "suggestions": [
-    {"task": "农信问题", "quadrant": "重要紧急", "reason": "今天有deadline"}
+    {"task": "项目周报", "quadrant": "重要紧急", "reason": "今天有deadline"}
   ],
-  "todayFocus": ["农信问题"]
+  "todayFocus": ["项目周报"]
 }
 ```
 ''';
     final r = AiResponseParser.parsePrioritize(raw);
-    expect(r.suggestions.single.taskTitle, '农信问题');
+    expect(r.suggestions.single.taskTitle, '项目周报');
     expect(r.suggestions.single.quadrant, Quadrant.importantUrgent);
-    expect(r.todayFocus, ['农信问题']);
+    expect(r.todayFocus, ['项目周报']);
   });
 
   test('parses review JSON array', () {
     const raw =
-        '[{"task":"农信问题","diagnosis":"任务太大","fogg":"A","suggestion":"拆成2分钟"}]';
+        '[{"task":"项目周报","diagnosis":"任务太大","fogg":"A","suggestion":"拆成2分钟"}]';
     final items = AiResponseParser.parseReview(raw);
-    expect(items.single.taskTitle, '农信问题');
+    expect(items.single.taskTitle, '项目周报');
     expect(items.single.foggFactor, 'A');
     expect(items.single.suggestion, '拆成2分钟');
   });
