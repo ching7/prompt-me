@@ -179,12 +179,10 @@ class AppTheme {
         displayLarge: GoogleFonts.fraunces(
           textStyle: body.displayLarge,
           fontWeight: FontWeight.w600,
-          fontFamilyFallback: _zhFallback,
         ),
         headlineMedium: GoogleFonts.fraunces(
           textStyle: body.headlineMedium,
           fontWeight: FontWeight.w500,
-          fontFamilyFallback: _zhFallback,
         ),
       ),
     );
@@ -461,7 +459,7 @@ class FeishuMarkdownParser {
 
   static List<ParsedTask> parse(String markdown, {required int year}) {
     final roots = <ParsedTask>[];
-    final stack = <(int depth, ParsedTask task)>[];
+    final stack = <({int depth, ParsedTask task})>[];
     DateTime? currentDate;
     var currentQuadrant = Quadrant.importantNotUrgent; // 未声明象限时的默认桶
 
@@ -488,7 +486,7 @@ class FeishuMarkdownParser {
         } else {
           stack.last.task.children.add(task);
         }
-        stack.add((depth, task));
+        stack.add((depth: depth, task: task));
         continue;
       }
 
@@ -933,10 +931,10 @@ class TodayAggregator {
     final pending = tasks.where((t) => !t.done).toList();
     final completed = tasks.where((t) => t.done).toList();
 
+    // Quadrant.values 已是优先级顺序，直接遍历；勿对 const 列表调用 sort。
     final byQuadrant = <Quadrant, List<TodayTask>>{};
-    for (final q in Quadrant.values..sort((a, b) => a.priority - b.priority)) {
-      final list = pending.where((t) => t.quadrant == q).toList();
-      byQuadrant[q] = list;
+    for (final q in Quadrant.values) {
+      byQuadrant[q] = pending.where((t) => t.quadrant == q).toList();
     }
 
     return TodayView(
@@ -1631,7 +1629,6 @@ class CalendarDao extends DatabaseAccessor<AppDatabase> with _$CalendarDaoMixin 
 
 `test/data/calendar_dao_test.dart`:
 ```dart
-import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promptme/data/database.dart';
