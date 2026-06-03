@@ -14,11 +14,13 @@
 
 - 已安装 Flutter SDK（`flutter --version` 可用）、Android Studio / SDK，且 `flutter doctor` 安卓部分无致命错误。
 - 有一台安卓真机（开发者模式 + USB 调试）或安卓模拟器。
-- 在仓库根目录 `/Users/chenyanan/Desktop/prompt-me` 执行。该目录已有 `docs/` 与 git 历史；Flutter 工程将创建在仓库根（`flutter create .`）。
+- 遵循 `CLAUDE.md` 的目录约定：**Flutter 工程创建在 `frontend/promptme-app/`**（不是仓库根）。下文所有 `lib/`、`test/`、`android/`、`pubspec.yaml` 路径与 `flutter`/`dart` 命令均位于/相对该目录——执行前 `cd frontend/promptme-app`，或用 IDE 打开该目录。
 
 > 设计令牌（颜色/字体/文案）来源：`docs/superpowers/prototypes/2026-06-03-promptme-v0-mockup.html`。需求来源：`docs/superpowers/specs/2026-06-03-promptme-v0-design.md`。
 
 ## File Structure（本计划将创建的文件）
+
+（以下均相对 Flutter 工程根 `frontend/promptme-app/`）
 
 ```
 pubspec.yaml                                  # 依赖
@@ -72,11 +74,11 @@ test/
 
 - [ ] **Step 1: 在仓库根创建 Flutter 工程**
 
-Run:
+Run（在仓库根执行，工程落到 `frontend/promptme-app/`）:
 ```bash
-flutter create --org com.promptme --project-name promptme --platforms=android .
+flutter create --org com.promptme --project-name promptme --platforms=android frontend/promptme-app
 ```
-Expected: 生成 `android/`、`lib/main.dart`、`pubspec.yaml`；`docs/` 不受影响。
+Expected: 在 `frontend/promptme-app/` 下生成 `android/`、`lib/main.dart`、`pubspec.yaml`；`docs/` 不受影响。**之后所有命令都在 `frontend/promptme-app/` 内执行**（先 `cd frontend/promptme-app`）。
 
 - [ ] **Step 2: 添加依赖**
 

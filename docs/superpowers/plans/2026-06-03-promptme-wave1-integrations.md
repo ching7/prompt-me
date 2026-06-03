@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter · http · shared_preferences · flutter_local_notifications · timezone · Riverpod · flutter_test
 
-**前置：** 计划①② 完成，`flutter test` 全绿，今日屏可手动新增/打卡/降级。
+**前置：** 计划①② 完成，`flutter test` 全绿，今日屏可手动新增/打卡/降级。（Flutter 工程位于 `frontend/promptme-app/`，本计划所有 `lib/`/`test/` 路径与命令均在该目录下执行——见 `CLAUDE.md`。）
 
 ---
 

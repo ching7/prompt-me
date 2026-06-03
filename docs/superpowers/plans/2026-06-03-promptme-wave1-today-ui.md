@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter · Riverpod 2 · Drift · confetti · flutter_test（widget test）
 
-**前置：** 计划① 已完成且 `flutter test` 全绿。
+**前置：** 计划① 已完成且 `flutter test` 全绿。（Flutter 工程位于 `frontend/promptme-app/`，本计划所有 `lib/`/`test/` 路径与 `flutter`/`dart` 命令均在该目录下执行——见 `CLAUDE.md`。）
 
 ---
 
