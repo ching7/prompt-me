@@ -15,8 +15,10 @@ class StatsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rate = total == 0 ? 0.0 : done / total;
-    return Row(
-      children: [
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         Expanded(
           child: _box(
             label: '连续天数',
@@ -76,7 +78,8 @@ class StatsHeader extends StatelessWidget {
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 
