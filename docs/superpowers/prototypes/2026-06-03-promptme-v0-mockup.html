@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptMe · V0 高保真原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* paper + ink */
+  --paper:#F4EDDF;
+  --paper-2:#EFE6D4;
+  --card:#FBF6EC;
+  --ink:#24201A;
+  --ink-60:rgba(36,32,26,.60);
+  --ink-40:rgba(36,32,26,.40);
+  --ink-20:rgba(36,32,26,.14);
+  /* eisenhower quadrants */
+  --q1:#C4543A; --q1-tint:#F1DCD1;   /* 重要紧急  terracotta */
+  --q2:#C2892B; --q2-tint:#F0E5C8;   /* 重要非紧急 ochre */
+  --q3:#3E7C77; --q3-tint:#D7E5E2;   /* 不重要紧急 teal */
+  --q4:#8A8B6F; --q4-tint:#E5E4D6;   /* 不重要不紧急 sage */
+  /* calendar chips */
+  --cal-work:#C4543A; --cal-grow:#3E7C77;
+  --pop:#FF6A3D;       /* celebration / tiny-win */
+  --leaf:#4F9D5E;      /* done / micro-habit easy */
+  --display:"Fraunces",Georgia,"Songti SC",serif;
+  --sans:"Hanken Grotesk","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  --zh:"PingFang SC","Noto Sans SC","Hanken Grotesk",sans-serif;
+  --r:30px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+html,body{background:#241F1A;}
+body{
+  font-family:var(--zh);
+  color:var(--ink);
+  min-height:100vh;
+  padding:64px 40px 96px;
+  background:
+    radial-gradient(1200px 600px at 12% -8%, #3a322a 0%, transparent 55%),
+    radial-gradient(1000px 700px at 100% 0%, #322b24 0%, transparent 50%),
+    #211d18;
+  position:relative;
+}
+/* grain overlay */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:999;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- presentation header ---------- */
+.masthead{max-width:1640px;margin:0 auto 52px;color:#F4EDDF;}
+.brand{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;}
+.brand .logo{
+  font-family:var(--display);font-weight:600;font-size:52px;letter-spacing:-.02em;
+  font-optical-sizing:auto;line-height:1;
+}
+.brand .logo em{font-style:italic;color:var(--pop);}
+.brand .tag{font-family:var(--sans);font-weight:500;font-size:15px;color:rgba(244,237,223,.62);letter-spacing:.06em;}
+.subhead{margin-top:18px;max-width:760px;font-family:var(--sans);font-size:15.5px;line-height:1.65;color:rgba(244,237,223,.68);}
+.subhead b{color:#F4EDDF;font-weight:600;}
+.pill-row{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;}
+.pill{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.04em;padding:7px 14px;border-radius:999px;border:1px solid rgba(244,237,223,.18);color:rgba(244,237,223,.8);background:rgba(244,237,223,.04);}
+
+/* ---------- board ---------- */
+.board{
+  max-width:1640px;margin:0 auto;
+  display:flex;gap:46px;flex-wrap:wrap;justify-content:flex-start;
+}
+.col{display:flex;flex-direction:column;align-items:center;gap:20px;opacity:0;transform:translateY(26px);animation:rise .8s cubic-bezier(.22,1,.36,1) forwards;}
+.col:nth-child(1){animation-delay:.05s} .col:nth-child(2){animation-delay:.18s}
+.col:nth-child(3){animation-delay:.31s} .col:nth-child(4){animation-delay:.44s}
+@keyframes rise{to{opacity:1;transform:none}}
+.caption{max-width:312px;text-align:center;color:#F4EDDF;}
+.caption .ct{font-family:var(--display);font-style:italic;font-weight:500;font-size:19px;}
+.caption .cd{font-family:var(--sans);font-size:13px;line-height:1.55;color:rgba(244,237,223,.6);margin-top:5px;}
+.caption .num{display:inline-block;font-family:var(--sans);font-weight:800;font-size:11px;color:var(--pop);border:1.5px solid var(--pop);border-radius:50%;width:21px;height:21px;line-height:18px;margin-right:7px;}
+
+/* ---------- phone ---------- */
+.phone{
+  width:340px;height:724px;border-radius:46px;position:relative;
+  background:var(--paper);
+  padding:13px;
+  box-shadow:
+    0 2px 0 1px rgba(0,0,0,.5) inset,
+    0 0 0 11px #100d0a,
+    0 0 0 13px #2c261f,
+    0 42px 80px -20px rgba(0,0,0,.7),
+    0 18px 40px -24px rgba(0,0,0,.6);
+}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--paper);
+  background-image:
+    radial-gradient(680px 300px at 80% -5%, rgba(196,84,58,.05), transparent 60%),
+    radial-gradient(520px 260px at -10% 8%, rgba(62,124,119,.05), transparent 60%);
+}
+/* punch-hole */
+.phone::before{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#0c0a08;z-index:40;box-shadow:0 0 0 2px rgba(255,255,255,.04);}
+.statusbar{position:relative;z-index:20;height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink);}
+.statusbar .sig{display:flex;gap:5px;align-items:center;opacity:.85}
+.statusbar .sig svg{display:block}
+.scroll{height:calc(100% - 42px);overflow:hidden;position:relative;}
+.pad{padding:6px 20px 26px;}
+
+/* ===== TODAY SCREEN ===== */
+.greet{display:flex;justify-content:space-between;align-items:flex-start;margin-top:4px;}
+.greet .date{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase;}
+.greet h1{font-family:var(--display);font-weight:500;font-size:30px;letter-spacing:-.01em;margin-top:3px;line-height:1.05;}
+.greet h1 em{font-style:italic;color:var(--q1);}
+.mark{font-family:var(--display);font-style:italic;font-weight:600;font-size:15px;color:var(--ink-60);}
+.mark b{color:var(--pop);font-style:normal;}
+
+.stats{display:flex;gap:13px;margin-top:18px;}
+.stat{flex:1;background:var(--card);border:1px solid var(--ink-20);border-radius:22px;padding:15px 16px;position:relative;overflow:hidden;box-shadow:0 12px 22px -18px rgba(36,32,26,.5);}
+.stat .lab{font-family:var(--sans);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--ink-60);}
+.streakbig{font-family:var(--display);font-weight:600;font-size:46px;line-height:.9;margin-top:8px;display:flex;align-items:baseline;gap:6px;}
+.streakbig .flame{font-size:22px;animation:flick 2.2s ease-in-out infinite;transform-origin:bottom;}
+@keyframes flick{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.08)}}
+.streakbig small{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink-40);}
+.ringwrap{display:flex;align-items:center;gap:13px;margin-top:6px;}
+.ring{width:64px;height:64px;flex:none;}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round;}
+.ring .bg{stroke:var(--ink-20);}
+.ring .fg{stroke:var(--leaf);stroke-dasharray:163.4;stroke-dashoffset:163.4;transform:rotate(-90deg);transform-origin:50% 50%;animation:fill 1.3s .5s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes fill{to{stroke-dashoffset:98}} /* 40% */
+.ring-num{font-family:var(--display);font-weight:600;font-size:26px;}
+.ring-sub{font-family:var(--sans);font-weight:600;font-size:11px;color:var(--ink-40);}
+
+.sec{margin-top:24px;}
+.sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.sec-h .t{font-family:var(--sans);font-weight:800;font-size:12.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);}
+.sec-h .ln{flex:1;height:1px;background:var(--ink-20);}
+.sec-h .c{font-family:var(--sans);font-weight:700;font-size:11px;color:var(--ink-40);}
+
+/* schedule (apple calendar) */
+.evt{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--ink-20);}
+.evt:last-child{border-bottom:none}
+.evt .time{font-family:var(--sans);font-weight:700;font-size:12.5px;color:var(--ink-60);width:42px;flex:none;padding-top:1px;}
+.evt .bar{width:3px;border-radius:3px;flex:none;}
+.evt .et{font-family:var(--zh);font-weight:500;font-size:14px;}
+.evt .ec{font-family:var(--sans);font-weight:600;font-size:10.5px;color:#fff;padding:2px 8px;border-radius:999px;display:inline-block;margin-top:4px;}
+
+/* quadrant task */
+.q{border-radius:20px;padding:14px 15px 13px;margin-bottom:12px;position:relative;background:var(--card);box-shadow:0 14px 26px -22px rgba(36,32,26,.6);border:1px solid var(--ink-20);overflow:hidden;}
+.q::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;}
+.q.q1::before{background:var(--q1)} .q.q2::before{background:var(--q2)}
+.q-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:999px;}
+.q1 .q-tag{color:var(--q1);background:var(--q1-tint)} .q2 .q-tag{color:#9a6c1d;background:var(--q2-tint)}
+.q-tag .dot{width:5px;height:5px;border-radius:50%;}
+.q1 .q-tag .dot{background:var(--q1)} .q2 .q-tag .dot{background:var(--q2)}
+.q-title{font-family:var(--zh);font-weight:600;font-size:16.5px;margin-top:9px;letter-spacing:-.01em;}
+.subs{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+.sub{display:flex;align-items:center;gap:8px;font-family:var(--zh);font-size:13px;color:var(--ink-60);}
+.sub .box{width:14px;height:14px;border-radius:5px;border:1.5px solid var(--ink-40);flex:none;}
+.actions{display:flex;gap:9px;margin-top:13px;}
+.btn{flex:1;border:none;cursor:pointer;font-family:var(--zh);font-weight:700;font-size:14px;padding:11px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s;}
+.btn:active{transform:scale(.97)}
+.btn-done{background:var(--ink);color:var(--paper);}
+.btn-done svg{stroke:var(--leaf)}
+.btn-hard{background:transparent;color:var(--ink-60);border:1.5px dashed var(--ink-20);}
+.btn-hard .arr{font-weight:800;color:var(--q3);}
+
+.done-row{display:flex;align-items:center;gap:10px;padding:11px 4px;margin-top:6px;opacity:.5;}
+.done-row .chk{width:20px;height:20px;border-radius:7px;background:var(--leaf);display:flex;align-items:center;justify-content:center;flex:none;}
+.done-row .dt{font-family:var(--zh);font-size:14px;text-decoration:line-through;}
+
+.empty-q{display:flex;gap:8px;margin-top:2px;}
+.eq{flex:1;border:1px dashed var(--ink-20);border-radius:14px;padding:9px;text-align:center;font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);}
+.eq .qd{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;}
+
+/* ===== SHEET (too hard) ===== */
+.dim{position:absolute;inset:0;background:rgba(28,24,19,.5);backdrop-filter:blur(2px);z-index:25;}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-radius:34px 34px 0 0;padding:22px 22px 30px;box-shadow:0 -20px 50px -10px rgba(0,0,0,.4);animation:sheetUp .7s .2s cubic-bezier(.22,1,.36,1) both;}
+@keyframes sheetUp{from{transform:translateY(70%);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--ink-20);margin:0 auto 18px;}
+.sheet h2{font-family:var(--display);font-weight:500;font-size:24px;letter-spacing:-.01em;line-height:1.15;}
+.sheet h2 em{font-style:italic;color:var(--q3);}
+.sheet .sub2{font-family:var(--zh);font-size:13.5px;color:var(--ink-60);margin-top:8px;line-height:1.5;}
+.reasons{display:flex;flex-direction:column;gap:11px;margin-top:20px;}
+.reason{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:18px;background:var(--card);border:1.5px solid var(--ink-20);cursor:pointer;transition:.18s;}
+.reason:hover{border-color:var(--q3);transform:translateX(3px);}
+.reason.sel{border-color:var(--q3);background:var(--q3-tint);}
+.reason .ic{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;background:var(--paper-2);}
+.reason .rt{font-family:var(--zh);font-weight:700;font-size:16px;}
+.reason .rmap{font-family:var(--sans);font-weight:700;font-size:10.5px;letter-spacing:.08em;color:var(--ink-40);margin-top:2px;}
+.reason .go{margin-left:auto;font-size:18px;color:var(--q3);opacity:0;transition:.18s}
+.reason.sel .go,.reason:hover .go{opacity:1}
+.fog-note{margin-top:20px;text-align:center;font-family:var(--zh);font-size:12.5px;color:var(--ink-40);line-height:1.5;}
+.fog-note b{color:var(--q3);font-weight:700;}
+
+/* ===== MICRO (shrunk) ===== */
+.before{margin-top:8px;}
+.crossed{position:relative;}
+.shrink-card{border-radius:20px;background:var(--card);border:1px solid var(--ink-20);padding:14px 15px;position:relative;overflow:hidden;animation:shrinkout 3.4s ease-in-out infinite;transform-origin:top center;}
+.shrink-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--q1)}
+@keyframes shrinkout{0%,32%{transform:scaleY(1);opacity:1}46%,100%{transform:scaleY(.5);opacity:.32}}
+.arrow-down{text-align:center;font-size:22px;color:var(--q3);margin:10px 0 4px;animation:bob 1.6s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.micro{border-radius:22px;padding:16px 17px;background:linear-gradient(135deg,#EAF3E9,#DDEDE9);border:1.5px solid rgba(79,157,94,.3);position:relative;box-shadow:0 16px 30px -20px rgba(79,157,94,.6);animation:popin 3.4s ease-in-out infinite;}
+@keyframes popin{0%,40%{transform:scale(.9);opacity:.3}54%,100%{transform:scale(1);opacity:1}}
+.micro .mlab{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10.5px;letter-spacing:.06em;color:var(--leaf);background:rgba(79,157,94,.14);padding:4px 10px;border-radius:999px;}
+.micro .mtitle{font-family:var(--zh);font-weight:600;font-size:17px;margin-top:11px;line-height:1.35;}
+.micro .mtitle b{color:var(--leaf);}
+.micro .mlevel{font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);margin-top:9px;}
+.micro .mact{display:flex;gap:9px;margin-top:14px;}
+/* lockscreen inset */
+.lock{margin-top:20px;border-radius:24px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(165deg,#2a2f3a 0%,#1d2129 60%,#161a20 100%);
+  box-shadow:0 20px 40px -18px rgba(0,0,0,.6);}
+.lock::after{content:"";position:absolute;inset:0;opacity:.5;background:radial-gradient(300px 120px at 80% -10%,rgba(79,157,94,.25),transparent 60%);}
+.lock .lh{position:relative;display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-weight:600;font-size:11px;color:rgba(255,255,255,.55);}
+.lock .ltime{position:relative;font-family:var(--display);font-weight:500;font-size:40px;text-align:center;margin:2px 0 16px;letter-spacing:.01em;}
+.lock .ltime small{font-family:var(--sans);font-weight:600;font-size:12px;display:block;color:rgba(255,255,255,.55);letter-spacing:.04em;}
+.notif{position:relative;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);border-radius:18px;padding:12px 13px;}
+.notif .nh{display:flex;align-items:center;gap:7px;font-family:var(--sans);font-weight:700;font-size:11px;color:rgba(255,255,255,.7);}
+.notif .nh .ndot{width:15px;height:15px;border-radius:5px;background:var(--pop);display:flex;align-items:center;justify-content:center;font-size:9px;}
+.notif .nt{font-family:var(--zh);font-weight:600;font-size:14.5px;margin-top:8px;line-height:1.35;}
+.notif .nb{display:flex;gap:8px;margin-top:12px;}
+.nbtn{flex:1;text-align:center;font-family:var(--zh);font-weight:700;font-size:12.5px;padding:8px;border-radius:11px;}
+.nbtn.d{background:#fff;color:#1d2129;}
+.nbtn.h{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.16);}
+
+/* ===== CELEBRATION ===== */
+.celebrate{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;
+  background:radial-gradient(120% 90% at 50% 30%, #FBF6EC 0%, #F1E4D2 100%);overflow:hidden;}
+.confetti{position:absolute;width:10px;height:14px;border-radius:2px;top:-20px;opacity:0;animation:fall 2.6s linear infinite;}
+@keyframes fall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(560px) rotate(540deg);opacity:0}}
+.seal{width:120px;height:120px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;position:relative;z-index:3;box-shadow:0 20px 50px -14px rgba(36,32,26,.6);animation:pop .7s cubic-bezier(.18,1.4,.4,1) both;}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.seal svg{stroke:var(--leaf);stroke-width:9;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .45s forwards;}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cel-streak{position:relative;z-index:3;margin-top:26px;font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase;}
+.cel-num{position:relative;z-index:3;font-family:var(--display);font-weight:600;font-size:76px;line-height:1;margin-top:4px;display:flex;align-items:baseline;gap:10px;justify-content:center;}
+.cel-num .from{font-size:34px;color:var(--ink-40);}
+.cel-num .to{color:var(--q1);animation:bump .6s 1s cubic-bezier(.18,1.5,.4,1) both;display:inline-block;}
+@keyframes bump{0%{transform:scale(.4) translateY(10px);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.cel-line{position:relative;z-index:3;font-family:var(--display);font-style:italic;font-weight:500;font-size:22px;margin-top:22px;color:var(--ink);}
+.cel-sub{position:relative;z-index:3;font-family:var(--zh);font-size:13px;color:var(--ink-60);margin-top:10px;}
+.cel-flame{position:relative;z-index:3;font-size:30px;margin-top:18px;animation:flick 1.6s ease-in-out infinite;}
+
+/* footer legend */
+.legend{max-width:1640px;margin:64px auto 0;color:#F4EDDF;border-top:1px solid rgba(244,237,223,.14);padding-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:24px;}
+.legend h4{font-family:var(--sans);font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,237,223,.5);margin-bottom:12px;}
+.legend p{font-family:var(--zh);font-size:13px;line-height:1.6;color:rgba(244,237,223,.72);}
+.legend .qchip{display:flex;align-items:center;gap:9px;margin-bottom:8px;font-family:var(--zh);font-size:13px;color:rgba(244,237,223,.82);}
+.legend .qchip i{width:13px;height:13px;border-radius:4px;display:inline-block;flex:none;}
+.legend code{font-family:var(--sans);background:rgba(244,237,223,.08);padding:1px 6px;border-radius:5px;font-size:12px;color:#F4EDDF;}
+@media(max-width:680px){body{padding:32px 16px 60px}.brand .logo{font-size:38px}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="logo">Prompt<em>Me</em></div>
+    <div class="tag">福格行为模型 · 行为操作系统 · V0 高保真原型</div>
+  </div>
+  <p class="subhead">手机不是用来<b>规划</b>的（规划留在飞书 + 苹果日历），它是<b>提示</b>与<b>跟踪</b>的地方。
+  四象限来自你飞书文档，日程来自苹果日历订阅；卡壳的那一秒，<b>[太难了]</b> 把任务降到 2 分钟、重打到锁屏；做到了，就庆祝。
+  下方为安卓端关键 4 屏（用真实的「广西农信 / 郑州银行」任务）。</p>
+  <div class="pill-row">
+    <span class="pill">P 提示 · 锁屏微习惯</span>
+    <span class="pill">A 能力 · 无底线降级</span>
+    <span class="pill">M 动机 · 即时庆祝</span>
+    <span class="pill">B 调试 · 失败原因打标</span>
+  </div>
+</header>
+
+<main class="board">
+
+  <!-- ============ 1. TODAY ============ -->
+  <div class="col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span>
+      </div>
+      <div class="scroll"><div class="pad">
+
+        <div class="greet">
+          <div>
+            <div class="date">6月3日 · 周三</div>
+            <h1>早上好，<em>亚男</em></h1>
+          </div>
+          <div class="mark">Prompt<b>·</b></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="lab">连续天数</div>
+            <div class="streakbig"><span class="flame">🔥</span>7<small>天</small></div>
+          </div>
+          <div class="stat">
+            <div class="lab">今日完成</div>
+            <div class="ringwrap">
+              <svg class="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="26"/><circle class="fg" cx="32" cy="32" r="26"/></svg>
+              <div><div class="ring-num">2<span style="font-size:15px;color:var(--ink-40)">/5</span></div><div class="ring-sub">还差 3 件</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="t">日程 · 苹果日历</span><span class="ln"></span><span class="c">订阅</span></div>
+          <div class="evt"><span class="time">09:00</span><span class="bar" style="background:var(--cal-work)"></span><div><div class="et">总结 · 周复盘</div><span class="ec" style="background:var(--cal-work)">工作</span></div></div>
+          <div class="evt"><span class="time">10:00</span><span class="bar" style="background:var(--cal-work)"></span><div><div class="et">周报</div><span class="ec" style="background:var(--cal-work)">工作</span></div></div>
+          <div class="evt"><span class="time">13:30</span><span class="bar" style="background:var(--cal-grow)"></span><div><div class="et">智能体周会</div><span class="ec" style="background:var(--cal-grow)">成长</span></div></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="t">今日要做 · 飞书</span><span class="ln"></span><span class="c">4 象限</span></div>
+
+          <div class="q q1">
+            <span class="q-tag"><span class="dot"></span>重要 · 紧急</span>
+            <div class="q-title">整理广西农信问题</div>
+            <div class="subs">
+              <div class="sub"><span class="box"></span>智算定制功能查看与了解</div>
+              <div class="sub"><span class="box"></span>星火智能体功能核对</div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-done"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="3.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>我做到了</button>
+              <button class="btn btn-hard"><span class="arr">↓</span> 太难了</button>
+            </div>
+          </div>
+
+          <div class="q q2">
+            <span class="q-tag"><span class="dot"></span>重要 · 非紧急</span>
+            <div class="q-title">郑州银行进度跟踪</div>
+            <div class="subs">
+              <div class="sub"><span class="box"></span>溯源方案调整</div>
+              <div class="sub"><span class="box"></span>国产化分支调整</div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-done"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="3.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>我做到了</button>
+              <button class="btn btn-hard"><span class="arr">↓</span> 太难了</button>
+            </div>
+          </div>
+
+          <div class="empty-q">
+            <div class="eq"><span class="qd" style="background:var(--q3)"></span>不重要紧急 · 0</div>
+            <div class="eq"><span class="qd" style="background:var(--q4)"></span>不重要不紧急 · 0</div>
+          </div>
+
+          <div class="done-row">
+            <span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="dt">整理人员投入情况</span>
+          </div>
+        </div>
+
+      </div></div>
+    </div></div>
+    <div class="caption"><div class="ct">今日时间线</div><div class="cd"><span class="num">1</span>日程在上、四象限任务在下；每条任务两个按钮。已完成沉底划掉。</div></div>
+  </div>
+
+  <!-- ============ 2. TOO HARD SHEET ============ -->
+  <div class="col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>9:42</span><span class="sig">
+        <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+        <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+      </span></div>
+      <div class="scroll"><div class="pad" style="filter:saturate(.9)">
+        <div class="greet"><div><div class="date">6月3日 · 周三</div><h1>早上好，<em>亚男</em></h1></div><div class="mark">Prompt<b>·</b></div></div>
+        <div class="stats">
+          <div class="stat"><div class="lab">连续天数</div><div class="streakbig"><span class="flame">🔥</span>7<small>天</small></div></div>
+          <div class="stat"><div class="lab">今日完成</div><div class="ringwrap"><svg class="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="26"/><circle class="fg" cx="32" cy="32" r="26" style="animation:none;stroke-dashoffset:98"/></svg><div><div class="ring-num">2<span style="font-size:15px;color:var(--ink-40)">/5</span></div><div class="ring-sub">还差 3 件</div></div></div></div>
+        </div>
+        <div class="sec"><div class="sec-h"><span class="t">今日要做 · 飞书</span><span class="ln"></span></div>
+          <div class="q q1"><span class="q-tag"><span class="dot"></span>重要 · 紧急</span><div class="q-title">整理广西农信问题</div></div>
+        </div>
+      </div></div>
+
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <h2>这件事<em>太难了</em>？<br>没关系，我把它变小。</h2>
+        <div class="sub2">选一个原因——我会据此把「整理广西农信问题」降到 2 分钟。</div>
+        <div class="reasons">
+          <div class="reason"><span class="ic">🌫️</span><div><div class="rt">忘记了</div><div class="rmap">P · 提示没接住</div></div><span class="go">→</span></div>
+          <div class="reason sel"><span class="ic">🪫</span><div><div class="rt">太累了</div><div class="rmap">A · 能力/精力不够</div></div><span class="go">→</span></div>
+          <div class="reason"><span class="ic">🫥</span><div><div class="rt">没动力</div><div class="rmap">M · 动机不足</div></div><span class="go">→</span></div>
+        </div>
+        <div class="fog-note"><b>降低门槛不是放弃。</b><br>动机推不动、累也消不掉，但「变小」永远做得到。</div>
+      </div>
+    </div></div>
+    <div class="caption"><div class="ct">太难了 → 选原因</div><div class="cd"><span class="num">2</span>原因即给行为打标（喂给「复盘」），三个选项分别对应 P / A / M。按钮被设计成被接住、不羞耻。</div></div>
+  </div>
+
+  <!-- ============ 3. SHRINK + LOCKSCREEN ============ -->
+  <div class="col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>9:42</span><span class="sig">
+        <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+        <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+      </span></div>
+      <div class="scroll"><div class="pad">
+        <div class="sec-h" style="margin-top:6px"><span class="t">已为你变小</span><span class="ln"></span><span class="c">太累 · A</span></div>
+
+        <div class="before">
+          <div class="shrink-card">
+            <span class="q-tag" style="color:var(--q1);background:var(--q1-tint)"><span class="dot" style="background:var(--q1)"></span>原任务 · 重要紧急</span>
+            <div class="q-title" style="font-size:15px">整理广西农信问题</div>
+            <div class="sub" style="margin-top:7px"><span class="box"></span>智算定制功能查看与了解</div>
+          </div>
+          <div class="arrow-down">↓</div>
+          <div class="micro">
+            <span class="mlab">⚡ 2 分钟微习惯</span>
+            <div class="mtitle">只<b>打开</b>农信问题清单，<br>写<b>一句话</b>就行。</div>
+            <div class="mlevel">无底线降级 · 第 1 级　|　还嫌难？再点一次继续变小</div>
+            <div class="mact">
+              <button class="btn btn-done"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="3.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>我做到了</button>
+              <button class="btn btn-hard"><span class="arr">↓</span> 还是难</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lock">
+          <div class="lh"><span>🔒 锁屏</span><span>周三 6月3日</span></div>
+          <div class="ltime">16:42<small>已刷新提示</small></div>
+          <div class="notif">
+            <div class="nh"><span class="ndot">P</span> PROMPTME · 现在只要 2 分钟</div>
+            <div class="nt">只打开农信问题清单，写一句话就行。</div>
+            <div class="nb"><span class="nbtn d">✓ 做到了</span><span class="nbtn h">↓ 太难了</span></div>
+          </div>
+        </div>
+
+      </div></div>
+    </div></div>
+    <div class="caption"><div class="ct">无底线降级 → 锁屏</div><div class="cd"><span class="num">3</span>任务视觉上「缩」成 2 分钟微习惯，并刷到锁屏常驻提示（通知动作按钮为可选升级）。</div></div>
+  </div>
+
+  <!-- ============ 4. CELEBRATION ============ -->
+  <div class="col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>17:05</span><span class="sig">
+        <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+        <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+      </span></div>
+      <div class="celebrate">
+        <span class="confetti" style="left:12%;background:var(--q1);animation-delay:0s"></span>
+        <span class="confetti" style="left:20%;background:var(--q2);animation-delay:.5s"></span>
+        <span class="confetti" style="left:30%;background:var(--leaf);animation-delay:1s;width:8px;height:8px;border-radius:50%"></span>
+        <span class="confetti" style="left:42%;background:var(--pop);animation-delay:.2s"></span>
+        <span class="confetti" style="left:55%;background:var(--q3);animation-delay:.9s"></span>
+        <span class="confetti" style="left:64%;background:var(--q2);animation-delay:1.4s;width:8px;height:8px;border-radius:50%"></span>
+        <span class="confetti" style="left:74%;background:var(--q1);animation-delay:.4s"></span>
+        <span class="confetti" style="left:84%;background:var(--pop);animation-delay:1.1s"></span>
+        <span class="confetti" style="left:90%;background:var(--leaf);animation-delay:.7s"></span>
+        <span class="confetti" style="left:48%;background:var(--q2);animation-delay:1.8s"></span>
+        <span class="confetti" style="left:8%;background:var(--pop);animation-delay:1.6s;width:8px;height:8px;border-radius:50%"></span>
+        <span class="confetti" style="left:68%;background:var(--leaf);animation-delay:2.1s"></span>
+
+        <div class="seal"><svg width="58" height="58" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+        <div class="cel-streak">连续天数 +1</div>
+        <div class="cel-num"><span class="from">7</span>→<span class="to">8</span></div>
+        <div class="cel-line">做到了。这就是积累。</div>
+        <div class="cel-sub">本周第 12 个微胜利 · 超过你上周 30%</div>
+        <div class="cel-flame">🔥</div>
+      </div>
+    </div></div>
+    <div class="caption"><div class="ct">我做到了 → 庆祝</div><div class="cd"><span class="num">4</span>福格的 celebration：彩纸 + 连续天数跳动 + 一句肯定，把正向情绪当场焊进习惯回路。</div></div>
+  </div>
+
+</main>
+
+<section class="legend">
+  <div>
+    <h4>四象限配色</h4>
+    <div class="qchip"><i style="background:#C4543A"></i>重要 · 紧急（今日聚焦置顶）</div>
+    <div class="qchip"><i style="background:#C2892B"></i>重要 · 非紧急</div>
+    <div class="qchip"><i style="background:#3E7C77"></i>不重要 · 紧急</div>
+    <div class="qchip"><i style="background:#8A8B6F"></i>不重要 · 不紧急</div>
+  </div>
+  <div>
+    <h4>数据从哪来</h4>
+    <p>日程来自<b style="color:#F4EDDF">苹果日历订阅</b>（只读、自动刷新）；四象限任务来自<b style="color:#F4EDDF">飞书文档</b>（V0 粘贴 Markdown / 第二波 OAuth 自动同步）。手机端只提示与跟踪，<code>不重录</code>。</p>
+  </div>
+  <div>
+    <h4>字体与气质</h4>
+    <p>Fraunces（柔衬线）做大字与数字，PingFang SC 做中文正文。米色纸感 + 颗粒，刻意做成「手记 / 教练」而非「待办压迫感」。</p>
+  </div>
+  <div>
+    <h4>这是原型，不是终稿</h4>
+    <p>用于对齐视觉与手感，定稿后据此写 Flutter 实现计划。颜色、字号、文案都可改——告诉我哪里不对。</p>
+  </div>
+</section>
+
+</body>
+</html>
