@@ -39,31 +39,28 @@ class AiClient {
     return line.isEmpty ? Downgrade.localFallback(taskTitle, level) : line;
   }
 
-  /// 统一的「给提示词、拿纯文本」。按 provider 组请求与解析响应。
+  /// 设置页「测试连接」用：发一条最小请求，成功返回 null，失败返回错误说明。
+  Future<String?> testConnection() async {
+    try {
+      await _complete('ping');
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  /// 统一的「给提示词、拿纯文本」，走 OpenAI 协议 `/chat/completions`。
   Future<String> _complete(String prompt) async {
-    final isClaude = config.provider == AiProvider.claude;
     final headers = <String, String>{
       'content-type': 'application/json',
-      if (isClaude) ...{
-        'x-api-key': config.apiKey,
-        'anthropic-version': '2023-06-01',
-      } else
-        'authorization': 'Bearer ${config.apiKey}',
+      'authorization': 'Bearer ${config.apiKey}',
     };
-    final body = isClaude
-        ? {
-            'model': config.effectiveModel,
-            'max_tokens': 1024,
-            'messages': [
-              {'role': 'user', 'content': prompt}
-            ],
-          }
-        : {
-            'model': config.effectiveModel,
-            'messages': [
-              {'role': 'user', 'content': prompt}
-            ],
-          };
+    final body = {
+      'model': config.effectiveModel,
+      'messages': [
+        {'role': 'user', 'content': prompt}
+      ],
+    };
 
     final resp = await _client.post(config.endpoint,
         headers: headers, body: jsonEncode(body));
@@ -71,13 +68,8 @@ class AiClient {
       throw Exception('AI 调用失败 HTTP ${resp.statusCode}: ${resp.body}');
     }
     final json = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-    if (isClaude) {
-      final content = json['content'] as List;
-      return (content.first as Map<String, dynamic>)['text'] as String;
-    } else {
-      final choices = json['choices'] as List;
-      return ((choices.first as Map<String, dynamic>)['message']
-          as Map<String, dynamic>)['content'] as String;
-    }
+    final choices = json['choices'] as List;
+    return ((choices.first as Map<String, dynamic>)['message']
+        as Map<String, dynamic>)['content'] as String;
   }
 }

@@ -8,12 +8,11 @@ class FeishuImporter {
   FeishuImporter(this.db);
   final AppDatabase db;
 
-  /// 解析飞书 Markdown，导入 [targetDate] 当天的任务（含嵌套），返回导入条数。
+  /// 解析飞书 Markdown，把整篇任务（含嵌套、含已完成）导入到 [targetDate]，返回导入条数。
+  /// 粘贴导入是一次显式动作：忽略文档内部的日期标题，全部排到选定的当天。
   Future<int> import(String markdown, {required DateTime targetDate}) async {
     final day = DateTime(targetDate.year, targetDate.month, targetDate.day);
-    final roots = FeishuMarkdownParser.parse(markdown, year: day.year)
-        .where((t) => t.date == null || _sameDay(t.date!, day))
-        .toList();
+    final roots = FeishuMarkdownParser.parse(markdown, year: day.year);
 
     var count = 0;
     Future<void> insertTree(ParsedTask node, int? parentId) async {
@@ -38,7 +37,4 @@ class FeishuImporter {
     }
     return count;
   }
-
-  bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 }

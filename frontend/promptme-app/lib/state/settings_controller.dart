@@ -5,25 +5,25 @@ class SettingsController {
   SettingsController(this._prefs);
   final SharedPreferences _prefs;
 
-  static const _kProvider = 'ai_provider';
   static const _kKey = 'ai_key';
   static const _kBaseUrl = 'ai_base_url';
+  static const _kModel = 'ai_model';
   static const _kSubUrl = 'subscription_url';
 
   AiConfig get aiConfig => AiConfig(
-        provider: AiProvider.values[_prefs.getInt(_kProvider) ?? 0],
         apiKey: _prefs.getString(_kKey) ?? '',
         baseUrl: _prefs.getString(_kBaseUrl),
+        model: _prefs.getString(_kModel),
       );
 
   Future<void> saveAi({
-    required AiProvider provider,
     required String apiKey,
     String? baseUrl,
+    String? model,
   }) async {
-    await _prefs.setInt(_kProvider, provider.index);
     await _prefs.setString(_kKey, apiKey);
     if (baseUrl != null) await _prefs.setString(_kBaseUrl, baseUrl);
+    if (model != null) await _prefs.setString(_kModel, model);
   }
 
   String? get pendingSubscriptionUrl => _prefs.getString(_kSubUrl);

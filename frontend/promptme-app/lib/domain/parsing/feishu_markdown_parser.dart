@@ -38,10 +38,11 @@ class FeishuMarkdownParser {
         continue;
       }
 
+      // 去标题装饰：井号/引用/星号/连字符/空白，以及飞书代码格式的反引号（`重要紧急`）。
       final text = line
           .trim()
-          .replaceAll(RegExp(r'^[#>*\s\-]+'), '')
-          .replaceAll(RegExp(r'[*#\s]+$'), '');
+          .replaceAll(RegExp(r'^[#>*`\s\-]+'), '')
+          .replaceAll(RegExp(r'[*#`\s]+$'), '');
 
       final date = _parseDate(text, year);
       if (date != null) {

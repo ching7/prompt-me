@@ -22,11 +22,19 @@ class _FeishuImportSheetState extends ConsumerState<FeishuImportSheet> {
   Future<void> _import() async {
     final db = ref.read(databaseProvider);
     final date = ref.read(selectedDateProvider);
-    final count = await FeishuImporter(db).import(_ctrl.text, targetDate: date);
-    if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('已导入 $count 条今日任务')));
+    try {
+      final count = await FeishuImporter(db).import(_ctrl.text, targetDate: date);
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(count > 0
+              ? '已导入 $count 条任务到今天'
+              : '没解析到任务：清单需是 - [ ] 或 * [ ] 这种 checkbox 格式')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('导入失败：$e')));
+    }
   }
 
   @override

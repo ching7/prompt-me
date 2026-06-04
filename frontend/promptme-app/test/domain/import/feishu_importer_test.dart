@@ -35,12 +35,38 @@ void main() {
     expect(done.quadrant, Quadrant.importantNotUrgent);
   });
 
-  test('only imports the section matching targetDate', () async {
+  test('imports all dated sections onto the selected day (ignores internal dates)',
+      () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     const md = '# 0603\n## 重要紧急\n- [ ] A\n# 0602\n## 重要紧急\n- [ ] B';
     await FeishuImporter(db).import(md, targetDate: DateTime(2026, 6, 3));
     final rows = await db.taskDao.tasksForDate(DateTime(2026, 6, 3));
-    expect(rows.map((t) => t.title), ['A']);
+    expect(rows.map((t) => t.title).toSet(), {'A', 'B'});
+  });
+
+  test('parses 飞书-style backtick quadrants and * checkboxes (real export)',
+      () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    const md = '''
+# 0603
+## `重要紧急`
+* [ ] 整理周报
+    * [ ] 汇总进展
+## `重要非紧急`
+* [x] 推进读书计划
+''';
+    final count =
+        await FeishuImporter(db).import(md, targetDate: DateTime(2026, 6, 3));
+    expect(count, 3);
+    final rows = await db.taskDao.tasksForDate(DateTime(2026, 6, 3));
+    final parent = rows.firstWhere((t) => t.title == '整理周报');
+    expect(parent.quadrant, Quadrant.importantUrgent); // 反引号象限被正确识别
+    final child = rows.firstWhere((t) => t.title == '汇总进展');
+    expect(child.parentTaskId, parent.id);
+    final done = rows.firstWhere((t) => t.title == '推进读书计划');
+    expect(done.status, TaskStatus.done);
+    expect(done.quadrant, Quadrant.importantNotUrgent);
   });
 }

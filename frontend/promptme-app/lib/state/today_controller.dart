@@ -37,6 +37,15 @@ class TodayController {
     ));
   }
 
+  /// 重新开启已完成任务：回到 pending、清掉完成时间。
+  Future<void> reopen(int id) => _db.taskDao.reopen(id);
+
+  /// 删除任务，连带其行为事件。
+  Future<void> deleteTask(int id) async {
+    await _db.taskEventDao.deleteForTask(id);
+    await _db.taskDao.deleteTask(id);
+  }
+
   /// 无底线降级：每次在原任务基础上把层级 +1，用本地兜底文案生成微习惯。
   /// 返回新的微习惯文案。AI 实网降级在计划③替换实现。
   Future<String> tooHard(int id, FailureReason reason) async {

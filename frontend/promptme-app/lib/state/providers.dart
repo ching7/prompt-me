@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/enums.dart';
@@ -33,17 +34,40 @@ TodayEvent rowToTodayEvent(CalendarEvent e) => TodayEvent(
       calendarName: e.calendarName,
     );
 
-final todayViewProvider = StreamProvider.autoDispose<TodayView>((ref) async* {
+// 同时监听「任务表」和「日历事件表」：任一变化都重算今日视图。
+// 仅 watch 任务表会漏掉「订阅拉取后写入日历事件」的刷新（订阅后不显示日程的根因）。
+final todayViewProvider = StreamProvider.autoDispose<TodayView>((ref) {
   final db = ref.watch(databaseProvider);
   final date = ref.watch(selectedDateProvider);
-  await for (final taskRows in db.taskDao.watchTasksForDate(date)) {
-    final eventRows = await db.calendarDao.eventsForDate(date);
-    yield TodayAggregator.build(
-      events: eventRows.map(rowToTodayEvent).toList(),
-      tasks: taskRows.map(rowToTodayTask).toList(),
-    );
+  final controller = StreamController<TodayView>();
+  List<Task>? tasks;
+  List<CalendarEvent>? events;
+  void emit() {
+    if (tasks == null || events == null) return;
+    controller.add(TodayAggregator.build(
+      events: events!.map(rowToTodayEvent).toList(),
+      tasks: tasks!.map(rowToTodayTask).toList(),
+    ));
   }
+
+  final taskSub = db.taskDao.watchTasksForDate(date).listen((rows) {
+    tasks = rows;
+    emit();
+  });
+  final eventSub = db.calendarDao.watchEventsForDate(date).listen((rows) {
+    events = rows;
+    emit();
+  });
+  ref.onDispose(() {
+    taskSub.cancel();
+    eventSub.cancel();
+    controller.close();
+  });
+  return controller.stream;
 });
+
+final subscriptionsProvider = StreamProvider.autoDispose<List<Subscription>>(
+    (ref) => ref.watch(databaseProvider).calendarDao.watchSubscriptions());
 
 final streakProvider = FutureProvider.autoDispose<int>((ref) async {
   final db = ref.watch(databaseProvider);

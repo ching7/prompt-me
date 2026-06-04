@@ -12,5 +12,8 @@ class TaskEventDao extends DatabaseAccessor<AppDatabase> with _$TaskEventDaoMixi
   Future<List<TaskEvent>> forTask(int taskId) =>
       (select(taskEvents)..where((e) => e.taskId.equals(taskId))).get();
 
+  Future<void> deleteForTask(int taskId) =>
+      (delete(taskEvents)..where((e) => e.taskId.equals(taskId))).go();
+
   Future<List<TaskEvent>> all() => select(taskEvents).get();
 }

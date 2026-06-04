@@ -11,9 +11,9 @@ class CalendarSubscriptionService {
   final AppDatabase db;
   final http.Client _client;
 
-  /// 拉取一个 webcal/已发布 ICS 链接并替换该订阅的全部事件。
+  /// 拉取一个 webcal/已发布 ICS 链接并替换该订阅的全部事件，返回解析到的事件总数。
   /// 失败时抛异常且不动旧数据（先解析成功再写库）。
-  Future<void> refresh(int subscriptionId, String url) async {
+  Future<int> refresh(int subscriptionId, String url) async {
     final uri = Uri.parse(url.replaceFirst('webcal://', 'https://'));
     final resp = await _client.get(uri);
     if (resp.statusCode != 200) {
@@ -35,6 +35,7 @@ class CalendarSubscriptionService {
     await (db.update(db.subscriptions)
           ..where((s) => s.id.equals(subscriptionId)))
         .write(SubscriptionsCompanion(lastFetchedAt: Value(DateTime.now())));
+    return parsed.length;
   }
 
   Future<void> refreshAll() async {

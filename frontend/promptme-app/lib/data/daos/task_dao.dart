@@ -40,6 +40,16 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
         completedAt: Value(at),
       ));
 
+  /// 重新开启：状态回 pending、清掉完成时间（连续天数随之重算）。
+  Future<void> reopen(int id) =>
+      (update(tasks)..where((t) => t.id.equals(id))).write(const TasksCompanion(
+        status: Value(TaskStatus.pending),
+        completedAt: Value<DateTime?>(null),
+      ));
+
+  Future<void> deleteTask(int id) =>
+      (delete(tasks)..where((t) => t.id.equals(id))).go();
+
   Future<void> applyDowngrade(int id, String microText, int level) =>
       (update(tasks)..where((t) => t.id.equals(id))).write(TasksCompanion(
         currentPromptText: Value(microText),

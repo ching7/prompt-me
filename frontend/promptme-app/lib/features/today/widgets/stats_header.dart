@@ -22,22 +22,27 @@ class StatsHeader extends StatelessWidget {
         Expanded(
           child: _box(
             label: '连续天数',
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 22)),
-                const SizedBox(width: 6),
-                Text('$streak',
-                    style: const TextStyle(
-                        fontSize: 40, fontWeight: FontWeight.w700, height: 1)),
-                const SizedBox(width: 4),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Text('天',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, color: AppColors.ink40)),
-                ),
-              ],
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text('🔥', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 6),
+                  Text('$streak',
+                      style: const TextStyle(
+                          fontSize: 40, fontWeight: FontWeight.w700, height: 1)),
+                  const SizedBox(width: 4),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Text('天',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink40)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -45,36 +50,40 @@ class StatsHeader extends StatelessWidget {
         Expanded(
           child: _box(
             label: '今日完成',
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 52,
-                        height: 52,
-                        child: CircularProgressIndicator(
-                          value: rate,
-                          strokeWidth: 7,
-                          backgroundColor: AppColors.ink20,
-                          valueColor:
-                              const AlwaysStoppedAnimation(AppColors.leaf),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 52,
+                          height: 52,
+                          child: CircularProgressIndicator(
+                            value: rate,
+                            strokeWidth: 7,
+                            backgroundColor: AppColors.ink20,
+                            valueColor:
+                                const AlwaysStoppedAnimation(AppColors.leaf),
+                          ),
                         ),
-                      ),
-                      Text('${(rate * 100).round()}%',
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700)),
-                    ],
+                        Text('${(rate * 100).round()}%',
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Text('$done/$total',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.w700)),
-              ],
+                  const SizedBox(width: 10),
+                  Text('$done/$total',
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.w700)),
+                ],
+              ),
             ),
           ),
         ),
