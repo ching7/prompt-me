@@ -12,6 +12,7 @@ import 'widgets/quadrant_section.dart';
 import 'widgets/schedule_section.dart';
 import 'widgets/stats_header.dart';
 import 'widgets/too_hard_sheet.dart';
+import '../settings/settings_screen.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -135,11 +136,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             Text('今天', style: Theme.of(context).textTheme.headlineMedium),
           ],
         ),
-        const Text('PromptMe',
-            style: TextStyle(
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.w600,
-                color: AppColors.ink60)),
+        IconButton(
+          icon: const Icon(Icons.tune, color: AppColors.ink60),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          ),
+        ),
       ],
     );
   }
