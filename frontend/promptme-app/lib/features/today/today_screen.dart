@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/enums.dart';
 import '../../domain/fogg/today_aggregator.dart';
+import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/today_controller.dart';
 import '../../theme/app_colors.dart';
 import 'widgets/add_task_sheet.dart';
+import 'widgets/ai_panel.dart';
 import 'widgets/celebration_overlay.dart';
 import 'widgets/quadrant_section.dart';
 import 'widgets/schedule_section.dart';
@@ -52,6 +54,58 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         .addTask(title: result.title, quadrant: result.quadrant);
   }
 
+  Future<void> _prioritize(TodayView view) async {
+    final titles =
+        view.byQuadrant.values.expand((l) => l).map((t) => t.title).toList();
+    if (titles.isEmpty) return;
+    final ai = ref.read(aiClientProvider);
+    if (!ai.config.isConfigured) {
+      _toast('先到设置里填 AI key');
+      return;
+    }
+    try {
+      final r = await ai.prioritize(
+        taskTitles: titles,
+        todayEvents: view.events.map((e) => e.title).toList(),
+      );
+      if (mounted) _showSheet(PrioritizeResultView(result: r));
+    } catch (e) {
+      _toast('AI 出错：$e');
+    }
+  }
+
+  Future<void> _review() async {
+    final db = ref.read(databaseProvider);
+    final ai = ref.read(aiClientProvider);
+    if (!ai.config.isConfigured) {
+      _toast('先到设置里填 AI key');
+      return;
+    }
+    final today = ref.read(selectedDateProvider);
+    final all = await db.taskDao.tasksForDate(today);
+    final overdue = all
+        .where((t) => t.status == TaskStatus.pending)
+        .map((t) => '${t.title}（被推迟${t.rolloverCount}次，${t.quadrant.label}）')
+        .toList();
+    try {
+      final items = await ai.review(overdue);
+      if (mounted) _showSheet(ReviewResultView(items: items));
+    } catch (e) {
+      _toast('AI 出错：$e');
+    }
+  }
+
+  void _showSheet(Widget child) => showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.paper,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+        builder: (_) => child,
+      );
+
+  void _toast(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
   @override
   Widget build(BuildContext context) {
     final viewAsync = ref.watch(todayViewProvider);
@@ -79,6 +133,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       streak: streak,
                       done: view.doneCount,
                       total: view.totalCount),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _prioritize(view),
+                          child: const Text('整理今日(AI)'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _review,
+                          child: const Text('复盘未完成(AI)'),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 22),
                   ScheduleSection(events: view.events),
                   for (final q in _orderedQuadrants())

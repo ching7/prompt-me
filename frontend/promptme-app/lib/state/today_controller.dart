@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/enums.dart';
 import '../domain/fogg/downgrade.dart';
+import 'integration_providers.dart';
 import 'providers.dart';
 
 class TodayController {
@@ -41,7 +42,16 @@ class TodayController {
   Future<String> tooHard(int id, FailureReason reason) async {
     final task = await _db.taskDao.getById(id);
     final level = (task?.downgradeLevel ?? 0) + 1;
-    final micro = Downgrade.localFallback(task?.title ?? '', level);
+    final title = task?.title ?? '';
+    String micro;
+    try {
+      final ai = ref.read(aiClientProvider);
+      micro = ai.config.isConfigured
+          ? await ai.downgrade(taskTitle: title, reason: reason, level: level)
+          : Downgrade.localFallback(title, level);
+    } catch (_) {
+      micro = Downgrade.localFallback(title, level);
+    }
     await _db.taskDao.applyDowngrade(id, micro, level);
     await _db.taskEventDao.log(TaskEventsCompanion.insert(
       taskId: id,
