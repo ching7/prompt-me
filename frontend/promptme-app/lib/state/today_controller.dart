@@ -60,6 +60,9 @@ class TodayController {
       reason: Value(reason),
       microVersionText: Value(micro),
     ));
+    try {
+      await ref.read(notificationServiceProvider).showMicroHabit(micro);
+    } catch (_) {}
     return micro;
   }
 }
