@@ -109,13 +109,13 @@ body::after{
 .tab .badge{position:absolute;top:9px;left:calc(50% + 7px);min-width:16px;height:16px;border-radius:999px;background:var(--pop);color:#fff;font-family:var(--sans);font-weight:800;font-size:9.5px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 0 2px var(--paper);}
 
 /* ---------- shared headers ---------- */
-.scr-h{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;margin-bottom:4px;}
+.scr-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;margin-bottom:8px;}
 .scr-h h1{font-family:var(--display);font-weight:500;font-size:28px;letter-spacing:-.01em;line-height:1.05;}
 .scr-h h1 em{font-style:italic;color:var(--pop);}
 .scr-h .sub{font-family:var(--sans);font-weight:600;font-size:12px;color:var(--ink-40);padding-bottom:4px;}
 .mark{font-family:var(--display);font-style:italic;font-weight:600;font-size:15px;color:var(--ink-60);}
 .mark b{color:var(--pop);font-style:normal;}
-.date{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase;}
+.date{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.06em;color:var(--ink-40);text-transform:uppercase;white-space:nowrap;}
 
 /* ---------- inbox ---------- */
 .swipehint{display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);margin:6px 0 12px;}
@@ -190,8 +190,8 @@ body::after{
 .task .due{display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-weight:800;font-size:10.5px;color:var(--q1);background:var(--q1-tint);padding:3px 8px;border-radius:8px;}
 .task.someday{opacity:.55;}
 /* 顶部紧凑统计 chip */
-.stat-chip{display:inline-flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--ink-20);border-radius:999px;padding:6px 12px;box-shadow:0 8px 16px -14px rgba(36,32,26,.5);}
-.stat-chip .it{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-weight:800;font-size:13.5px;color:var(--ink);}
+.stat-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--ink-20);border-radius:999px;padding:5px 10px;box-shadow:0 8px 16px -14px rgba(36,32,26,.5);flex:none;}
+.stat-chip .it{display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-weight:800;font-size:12px;color:var(--ink);}
 .stat-chip .it .fl{font-size:14px;}
 .stat-chip .it small{font-weight:700;font-size:11px;color:var(--ink-40);}
 .stat-chip .vr{width:1px;height:14px;background:var(--ink-20);}
@@ -221,6 +221,16 @@ body::after{
 .badge-p{display:inline-flex;align-items:center;font-family:var(--sans);font-weight:800;font-size:9.5px;letter-spacing:.04em;color:#fff;background:var(--q3);padding:3px 8px;border-radius:8px;}
 .task.over{border-color:rgba(196,84,58,.38);}
 .task .over-meta{font-family:var(--sans);font-weight:800;font-size:10.5px;color:var(--q1);margin-top:6px;}
+/* MAP 诊断徽章（AI 异步打，采用参考稿语义、配色用我们暖色）*/
+/* 颜色只按 高/低/需提示 三档区分；跨 M/A/P 统一（M高=A高、M低=A低）。是哪个维度只看文字，由 AI 判断 */
+.mt{display:inline-flex;align-items:center;font-family:var(--sans);font-weight:800;font-size:9.5px;letter-spacing:.02em;padding:3px 7px;border-radius:6px;white-space:nowrap;border:1px solid transparent;}
+.mt.hi{color:#2f7d4e;background:rgba(79,157,94,.15);border-color:rgba(79,157,94,.32);}    /* 高 · 足够（绿）*/
+.mt.lo{color:var(--q1);background:var(--q1-tint);border-color:rgba(196,84,58,.3);}        /* 低 · 不足、需改进（红）*/
+.mt.p{color:#6b4a0a;background:#F3DE9A;border-color:#E2C55E;}                             /* 需提示（黄）*/
+/* 任务行布局：左=标题+面包屑，右=MAP 标签列（压低行高，对齐参考稿事件行）*/
+.task .trow{display:flex;align-items:flex-start;gap:10px;}
+.task .tbody{flex:1;min-width:0;}
+.task .tright{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding-top:1px;}
 /* 快速录入 FAB */
 .fab{position:absolute;right:16px;bottom:80px;z-index:26;width:46px;height:46px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:300;box-shadow:0 14px 26px -10px rgba(36,32,26,.6);}
 
@@ -431,7 +441,7 @@ body::after{
         </span></div>
         <div class="scroll tabbed"><div class="pad">
           <div class="scr-h">
-            <div><div class="date">6月5日 · 周四</div><h1>待办</h1></div>
+            <div class="date">6月5日 · 周四</div>
             <div class="stat-chip">
               <span class="it"><span class="fl">🔥</span>7</span>
               <span class="vr"></span>
@@ -457,25 +467,37 @@ body::after{
             <div class="swipe-tip"><span class="l">← 左滑做到了</span> · <span class="r">右滑太难了 →</span></div>
 
             <div class="task dwork">
-              <div class="tt">写 Java 代码</div>
-              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>订单系统重构</div>
-              <div class="tags"><span class="tagc">@电脑</span><span class="tagc hi">⚡ 高精力</span></div>
+              <div class="trow">
+                <div class="tbody">
+                  <div class="tt">写 Java 代码</div>
+                  <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>订单系统重构</div>
+                </div>
+                <div class="tright"><span class="mt lo">A 低</span></div>
+              </div>
             </div>
 
             <div class="swipe task-sw">
               <div class="swipe-bg done"><span class="sa">我做到了 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
               <div class="task dmedia slid-l">
-                <div class="tt">小红书笔记调研与选题</div>
-                <div class="crumb"><span class="dom" style="color:var(--q3)"><span class="d" style="background:var(--q3)"></span>自媒体</span><span class="sep">›</span>小红书 5W 粉</div>
-                <div class="tags"><span class="tagc">@电脑</span><span class="tagc">低精力</span></div>
+                <div class="trow">
+                  <div class="tbody">
+                    <div class="tt">小红书笔记调研与选题</div>
+                    <div class="crumb"><span class="dom" style="color:var(--q3)"><span class="d" style="background:var(--q3)"></span>自媒体</span><span class="sep">›</span>小红书 5W 粉</div>
+                  </div>
+                  <div class="tright"><span class="mt hi">A 高</span></div>
+                </div>
               </div>
             </div>
 
             <div class="task dwork over">
-              <div class="tt">整理 API 文档</div>
-              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>开放平台</div>
-              <div class="over-meta">⏰ 已推迟 2 次</div>
-              <div class="tags"><span class="tagc">@电脑</span><span class="badge-p">需提示</span></div>
+              <div class="trow">
+                <div class="tbody">
+                  <div class="tt">整理 API 文档</div>
+                  <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>开放平台</div>
+                  <div class="over-meta">⏰ 已推迟 2 次</div>
+                </div>
+                <div class="tright"><span class="mt lo">M 低</span><span class="mt p">需提示</span></div>
+              </div>
               <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：老被推迟、多半动机低（M）。试试「只写文档大纲标题」就算完成。</div></div>
             </div>
 
@@ -488,15 +510,23 @@ body::after{
           <div class="sec" style="margin-top:20px">
             <div class="sec-h"><span class="t">下一步行动</span><span class="ln"></span><span class="c">无日期</span></div>
             <div class="task dwork">
-              <div class="tt">回复设计评审意见</div>
-              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>周会跟进</div>
-              <div class="tags"><span class="tagc">@电脑</span></div>
+              <div class="trow">
+                <div class="tbody">
+                  <div class="tt">回复设计评审意见</div>
+                  <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>周会跟进</div>
+                </div>
+                <div class="tright"><span class="mt hi">A 高</span></div>
+              </div>
             </div>
             <div class="task dfam">
-              <div class="tt">给奶奶约下周复查</div>
-              <div class="crumb"><span class="dom" style="color:#8A8B6F"><span class="d" style="background:#8A8B6F"></span>家庭</span></div>
-              <div class="tags"><span class="tagc">@电话</span><span class="tagc wait">等待回电</span></div>
-              <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：打个电话 2 分钟就能定（A 低），别拖成心事。</div></div>
+              <div class="trow">
+                <div class="tbody">
+                  <div class="tt">给奶奶约下周复查</div>
+                  <div class="crumb"><span class="dom" style="color:#8A8B6F"><span class="d" style="background:#8A8B6F"></span>家庭</span></div>
+                </div>
+                <div class="tright"><span class="mt hi">A 高</span><span class="tagc wait">等待回电</span></div>
+              </div>
+              <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：打个电话 2 分钟就能定（A 高·易做），别拖成心事。</div></div>
             </div>
           </div>
 
@@ -504,9 +534,13 @@ body::after{
           <div class="sec" style="margin-top:20px">
             <div class="sec-h"><span class="t">即将到来</span><span class="ln"></span><span class="c">有日期</span></div>
             <div class="task dwork">
-              <div class="tt">去香港出差 3 天</div>
-              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>客户对接</div>
-              <div class="tags"><span class="due">📅 6月12日</span><span class="tagc">@外出</span></div>
+              <div class="trow">
+                <div class="tbody">
+                  <div class="tt">去香港出差 3 天</div>
+                  <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>客户对接</div>
+                </div>
+                <div class="tright"><span class="due">📅 6月12日</span><span class="mt lo">A 低</span></div>
+              </div>
             </div>
           </div>
 
@@ -514,12 +548,16 @@ body::after{
           <div class="sec" style="margin-top:20px">
             <div class="sec-h"><span class="t">将来也许</span><span class="ln"></span><span class="c">someday</span></div>
             <div class="task dlearn someday">
-              <div class="tt">研究 MCP 协议</div>
-              <div class="tags"><span class="tagc">@电脑</span></div>
+              <div class="trow">
+                <div class="tbody"><div class="tt">研究 MCP 协议</div></div>
+                <div class="tright"><span class="mt lo">A 低</span></div>
+              </div>
             </div>
             <div class="task dlearn someday">
-              <div class="tt">学习 LangGraph</div>
-              <div class="tags"><span class="tagc">@电脑</span></div>
+              <div class="trow">
+                <div class="tbody"><div class="tt">学习 LangGraph</div></div>
+                <div class="tright"><span class="mt lo">A 低</span></div>
+              </div>
               <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：目标偏大、不满足 A。建议拆成「读官方教程第一章」再进今日。</div></div>
             </div>
           </div>
@@ -541,7 +579,7 @@ body::after{
           </div>
         </div>
       </div></div>
-      <div class="caption"><div class="ct">待办 · GTD + AI</div><div class="cd"><span class="num">3</span>顶部 <b style="color:#F4EDDF">AI 提示横幅</b>（降门槛 nudge + 动机星级 + 换一条）取代聚焦卡；下面今日待办置顶，其余按 下一步 / 即将 / 将来也许 分类。每条带领域色标 + 面包屑 + 情境标签；<b style="color:#F4EDDF">AI 异步分析</b>给逾期/偏大项打「需提示」并建议变小；右下 <b style="color:#F4EDDF">＋</b> 随手记。</div></div>
+      <div class="caption"><div class="ct">待办 · GTD + AI</div><div class="cd"><span class="num">3</span>顶部 <b style="color:#F4EDDF">AI 提示横幅</b>（降门槛 nudge + 动机星级 + 换一条）取代聚焦卡；下面今日待办置顶，其余按 下一步 / 即将 / 将来也许 分类。每条带领域色标 + 面包屑 + <b style="color:#F4EDDF">MAP 诊断标签</b>（M高/A低/需提示，AI 异步打）；逾期/偏大项额外建议变小；右下 <b style="color:#F4EDDF">＋</b> 随手记。</div></div>
     </div>
 
     <!-- ④ 复盘 -->
@@ -600,7 +638,7 @@ body::after{
           <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
         </span></div>
         <div class="scroll"><div class="pad" style="filter:saturate(.9)">
-          <div class="scr-h"><div><div class="date">6月5日 · 周四</div><h1>待办</h1></div><div class="mark">Prompt<b>·</b></div></div>
+          <div class="scr-h"><div class="date">6月5日 · 周四</div><div class="mark">Prompt<b>·</b></div></div>
           <div class="sec" style="margin-top:16px"><div class="sec-h"><span class="t">★ 今日待办</span><span class="ln"></span></div>
             <div class="task dwork"><div class="tt">写 Java 代码</div><div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>订单系统重构</div></div>
           </div>
@@ -700,11 +738,18 @@ body::after{
   </div>
   <div>
     <h4>相比 V0 变了什么</h4>
-    <p>砍掉<b>日历订阅 / 飞书导入 / 四象限</b>；新增<b>桌面捕获 + 收件箱 + 3 Tab</b>（收件箱 / 待办 / 复盘）。待办屏按 <b>GTD 智能清单</b>（今日 / 下一步 / 即将到来 / 将来也许）组织，<b>领域色标 + 面包屑 + 情境标签</b>接替四象限；统计缩到右上角；保留<b>正反馈 + 福格闭环</b>。</p>
+    <p>砍掉<b>日历订阅 / 飞书导入 / 四象限</b>；新增<b>桌面捕获 + 收件箱 + 3 Tab</b>（收件箱 / 待办 / 复盘）。待办屏按 <b>GTD 智能清单</b>（今日 / 下一步 / 即将到来 / 将来也许）组织，<b>领域色标 + 面包屑 + MAP 诊断标签</b>接替四象限；统计缩到右上角；保留<b>正反馈 + 福格闭环</b>。</p>
   </div>
   <div>
     <h4>AI 在哪出现（吸收参考稿，配色用我们的）</h4>
     <p>顶部 <b>提示横幅</b>：此刻就做的降门槛一步 + 动机星级 + 换一条；后台 <b>异步分析</b>每条是否合理、是否满足 M/A/P，给逾期 / 偏大项打 <code>需提示</code> 并建议变小；<b>复盘</b>屏做整理 / 复盘。不取参考稿的蓝色。</p>
+  </div>
+  <div>
+    <h4>任务标签 = MAP 诊断（AI 异步打 · 统一右侧）</h4>
+    <p style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center;">
+      <span class="mt hi">M 高</span><span class="mt hi">A 高</span><span class="mt lo">M 低</span><span class="mt lo">A 低</span><span class="mt p">需提示</span>
+    </p>
+    <p><b>颜色按「高 / 低 / 需提示」三档</b>（跨 M/A/P 统一：M 高=A 高、M 低=A 低）：<b>高=绿</b>（动机/能力足够，好）、<b>低=红</b>（不足、需改进——难启动=A 低、动机弱=M 低）、<b>需提示=黄</b>（该触发 P 干预）。是 M / A / P 哪个维度只看文字，由 <b>AI 分析</b>判断写入。标签靠右、压低行高。</p>
   </div>
   <div>
     <h4>字体与气质</h4>
