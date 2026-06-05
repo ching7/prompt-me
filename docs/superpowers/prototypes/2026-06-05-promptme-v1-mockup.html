@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptMe · V1 高保真原型（桌面捕获 + GTD + 福格 + AI）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EDDF; --paper-2:#EFE6D4; --card:#FBF6EC;
+  --ink:#24201A; --ink-60:rgba(36,32,26,.60); --ink-40:rgba(36,32,26,.40); --ink-20:rgba(36,32,26,.14);
+  --q1:#C4543A; --q1-tint:#F1DCD1;   /* terracotta — 删除 / 原任务 / 聚焦强调 */
+  --q3:#3E7C77; --q3-tint:#D7E5E2;   /* teal — 太难了 / 降级 */
+  --pop:#FF6A3D;                      /* 捕获 / 庆祝 / 强调 */
+  --leaf:#4F9D5E;                     /* 完成 / 微习惯 / 加入今日 */
+  --display:"Fraunces",Georgia,"Songti SC",serif;
+  --sans:"Hanken Grotesk","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  --zh:"PingFang SC","Noto Sans SC","Hanken Grotesk",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+html,body{background:#241F1A;}
+body{
+  font-family:var(--zh);color:var(--ink);min-height:100vh;padding:64px 40px 96px;position:relative;
+  background:
+    radial-gradient(1200px 600px at 12% -8%, #3a322a 0%, transparent 55%),
+    radial-gradient(1000px 700px at 100% 0%, #322b24 0%, transparent 50%),
+    #211d18;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:999;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- masthead ---------- */
+.masthead{max-width:1680px;margin:0 auto 48px;color:#F4EDDF;}
+.brand{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;}
+.brand .logo{font-family:var(--display);font-weight:600;font-size:52px;letter-spacing:-.02em;line-height:1;}
+.brand .logo em{font-style:italic;color:var(--pop);}
+.brand .tag{font-family:var(--sans);font-weight:500;font-size:15px;color:rgba(244,237,223,.62);letter-spacing:.05em;}
+.subhead{margin-top:18px;max-width:880px;font-family:var(--sans);font-size:15.5px;line-height:1.65;color:rgba(244,237,223,.68);}
+.subhead b{color:#F4EDDF;font-weight:600;}
+.pill-row{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;}
+.pill{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.03em;padding:7px 14px;border-radius:999px;border:1px solid rgba(244,237,223,.18);color:rgba(244,237,223,.8);background:rgba(244,237,223,.04);}
+
+/* ---------- flow rows ---------- */
+.flow{max-width:1680px;margin:0 auto;}
+.flow-h{display:flex;align-items:center;gap:14px;margin:40px 2px 8px;color:#F4EDDF;}
+.flow-h .fn{font-family:var(--sans);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,237,223,.45);}
+.flow-h .ft{font-family:var(--display);font-style:italic;font-weight:500;font-size:20px;color:#F4EDDF;}
+.flow-h .fl{flex:1;height:1px;background:rgba(244,237,223,.14);}
+.board{display:flex;gap:46px;flex-wrap:wrap;align-items:flex-start;}
+.col{display:flex;flex-direction:column;align-items:center;gap:18px;opacity:0;transform:translateY(26px);animation:rise .8s cubic-bezier(.22,1,.36,1) forwards;}
+.col:nth-child(2){animation-delay:.12s} .col:nth-child(3){animation-delay:.24s} .col:nth-child(4){animation-delay:.36s}
+@keyframes rise{to{opacity:1;transform:none}}
+.caption{max-width:324px;text-align:center;color:#F4EDDF;}
+.caption .ct{font-family:var(--display);font-style:italic;font-weight:500;font-size:19px;}
+.caption .cd{font-family:var(--sans);font-size:13px;line-height:1.55;color:rgba(244,237,223,.6);margin-top:5px;}
+.caption .num{display:inline-block;font-family:var(--sans);font-weight:800;font-size:11px;color:var(--pop);border:1.5px solid var(--pop);border-radius:50%;width:21px;height:21px;line-height:18px;margin-right:7px;}
+
+/* ---------- desktop capture popover (macOS) ---------- */
+.macstage{display:flex;flex-direction:column;align-items:center;gap:0;}
+.menubar{width:300px;height:26px;border-radius:8px 8px 0 0;background:rgba(20,17,14,.82);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:0 12px;border:1px solid rgba(255,255,255,.08);border-bottom:none;}
+.menubar .mb-ic{display:flex;align-items:center;gap:5px;font-family:var(--sans);font-weight:700;font-size:10.5px;color:rgba(244,237,223,.7);}
+.menubar .mb-leaf{width:14px;height:14px;border-radius:4px;background:var(--leaf);display:flex;align-items:center;justify-content:center;font-size:9px;}
+.menubar .mb-t{font-family:var(--sans);font-weight:600;font-size:10.5px;color:rgba(244,237,223,.55);}
+.connector{width:2px;height:14px;background:linear-gradient(#bdb2a0,transparent);}
+.macwin{width:392px;border-radius:18px;background:var(--card);overflow:hidden;position:relative;
+  box-shadow:0 0 0 1px var(--ink-20), 0 44px 90px -26px rgba(0,0,0,.72), 0 18px 40px -24px rgba(0,0,0,.6);}
+.macbar{height:40px;display:flex;align-items:center;gap:9px;padding:0 15px;border-bottom:1px solid var(--ink-20);background:var(--paper-2);}
+.traffic{display:flex;gap:7px;}
+.traffic i{width:11px;height:11px;border-radius:50%;}
+.traffic .r{background:#ec6a5e} .traffic .y{background:#f4bf4f} .traffic .g{background:#61c554}
+.macbar .wt{font-family:var(--sans);font-weight:700;font-size:11px;color:var(--ink-40);letter-spacing:.04em;}
+.macbar .wt b{color:var(--ink-60)}
+.cap-body{padding:20px 19px 17px;}
+.cap-prompt{font-family:var(--zh);font-size:13px;color:var(--ink-60);margin-bottom:12px;line-height:1.45;}
+.cap-prompt b{color:var(--ink);font-weight:600;}
+.cap-input{display:flex;align-items:center;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px 15px;box-shadow:0 0 0 4px rgba(36,32,26,.05);}
+.cap-input .txt{font-family:var(--zh);font-weight:600;font-size:17px;color:var(--ink);}
+.cap-input .caret{width:2px;height:21px;background:var(--pop);margin-left:2px;animation:blink 1.05s step-end infinite;}
+@keyframes blink{50%{opacity:0}}
+.cap-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.cap-foot .hint{font-family:var(--sans);font-size:11px;color:var(--ink-40);display:flex;align-items:center;gap:6px;}
+.kbd{font-family:var(--sans);font-weight:700;font-size:10.5px;background:var(--paper-2);border:1px solid var(--ink-20);border-radius:6px;padding:2px 7px;color:var(--ink-60);}
+.cap-send{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:11px;color:var(--leaf);background:rgba(79,157,94,.12);border:1px solid rgba(79,157,94,.28);padding:5px 11px;border-radius:999px;}
+
+/* ---------- phone ---------- */
+.phone{width:340px;height:724px;border-radius:46px;position:relative;background:var(--paper);padding:13px;
+  box-shadow:0 2px 0 1px rgba(0,0,0,.5) inset,0 0 0 11px #100d0a,0 0 0 13px #2c261f,0 42px 80px -20px rgba(0,0,0,.7),0 18px 40px -24px rgba(0,0,0,.6);}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--paper);
+  background-image:radial-gradient(680px 300px at 80% -5%, rgba(255,106,61,.05), transparent 60%),radial-gradient(520px 260px at -10% 8%, rgba(62,124,119,.05), transparent 60%);}
+.phone::before{content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:#0c0a08;z-index:40;box-shadow:0 0 0 2px rgba(255,255,255,.04);}
+.statusbar{position:relative;z-index:20;height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink);}
+.statusbar .sig{display:flex;gap:5px;align-items:center;opacity:.85}
+.scroll{height:calc(100% - 42px);overflow:hidden;position:relative;}
+.pad{padding:6px 18px 26px;}
+.scroll.tabbed .pad{padding-bottom:88px;}
+
+/* ---------- bottom tab bar ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:30;height:66px;display:flex;
+  background:rgba(251,246,236,.93);backdrop-filter:blur(12px);border-top:1px solid var(--ink-20);}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;color:var(--ink-40);}
+.tab svg{width:23px;height:23px;}
+.tab .tl{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.02em;}
+.tab.on{color:var(--ink);}
+.tab.on::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--ink);}
+.tab .badge{position:absolute;top:9px;left:calc(50% + 7px);min-width:16px;height:16px;border-radius:999px;background:var(--pop);color:#fff;font-family:var(--sans);font-weight:800;font-size:9.5px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 0 2px var(--paper);}
+
+/* ---------- shared headers ---------- */
+.scr-h{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;margin-bottom:4px;}
+.scr-h h1{font-family:var(--display);font-weight:500;font-size:28px;letter-spacing:-.01em;line-height:1.05;}
+.scr-h h1 em{font-style:italic;color:var(--pop);}
+.scr-h .sub{font-family:var(--sans);font-weight:600;font-size:12px;color:var(--ink-40);padding-bottom:4px;}
+.mark{font-family:var(--display);font-style:italic;font-weight:600;font-size:15px;color:var(--ink-60);}
+.mark b{color:var(--pop);font-style:normal;}
+.date{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase;}
+
+/* ---------- inbox ---------- */
+.swipehint{display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);margin:6px 0 12px;}
+.swipehint .l{color:var(--leaf)} .swipehint .r{color:var(--q1)}
+.swipe{position:relative;margin-bottom:12px;border-radius:18px;}
+.swipe-bg{position:absolute;inset:0;border-radius:18px;display:flex;align-items:center;padding:0 20px;}
+.swipe-bg.add{background:rgba(79,157,94,.16);justify-content:flex-end;color:var(--leaf);}
+.swipe-bg.del{background:rgba(196,84,58,.15);justify-content:flex-start;color:var(--q1);}
+.swipe-bg .sa{display:flex;align-items:center;gap:7px;font-family:var(--zh);font-weight:800;font-size:14px;}
+.inb{position:relative;background:var(--card);border:1px solid var(--ink-20);border-radius:18px;padding:14px 15px;box-shadow:0 12px 22px -20px rgba(36,32,26,.5);}
+.inb.slid-l{transform:translateX(-92px);}
+.inb .it{font-family:var(--zh);font-weight:600;font-size:15.5px;line-height:1.4;}
+.inb .meta{display:flex;align-items:center;gap:9px;margin-top:10px;font-family:var(--sans);font-size:11px;color:var(--ink-40);}
+.inb .src{display:inline-flex;align-items:center;gap:4px;font-weight:700;}
+.inb .src.desk{color:var(--q3);}
+.inb-mb{margin-bottom:12px;}
+
+/* ---------- today tasks ---------- */
+.stats{display:flex;gap:13px;margin-top:16px;}
+.stat{flex:1;background:var(--card);border:1px solid var(--ink-20);border-radius:22px;padding:15px 16px;position:relative;overflow:hidden;box-shadow:0 12px 22px -18px rgba(36,32,26,.5);}
+.stat .lab{font-family:var(--sans);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--ink-60);}
+.streakbig{font-family:var(--display);font-weight:600;font-size:44px;line-height:.9;margin-top:8px;display:flex;align-items:baseline;gap:6px;}
+.streakbig .flame{font-size:21px;animation:flick 2.2s ease-in-out infinite;transform-origin:bottom;}
+@keyframes flick{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.08)}}
+.streakbig small{font-family:var(--sans);font-weight:700;font-size:13px;color:var(--ink-40);}
+.ringwrap{display:flex;align-items:center;gap:12px;margin-top:6px;}
+.ring{width:60px;height:60px;flex:none;}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round;}
+.ring .bg{stroke:var(--ink-20);}
+.ring .fg{stroke:var(--leaf);stroke-dasharray:163.4;stroke-dashoffset:163.4;transform:rotate(-90deg);transform-origin:50% 50%;animation:fill 1.3s .5s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes fill{to{stroke-dashoffset:98}}
+.ring-num{font-family:var(--display);font-weight:600;font-size:25px;}
+.ring-sub{font-family:var(--sans);font-weight:600;font-size:11px;color:var(--ink-40);}
+
+.sec{margin-top:22px;}
+.sec-h{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+.sec-h .t{font-family:var(--sans);font-weight:800;font-size:12.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);}
+.sec-h .ln{flex:1;height:1px;background:var(--ink-20);}
+.sec-h .c{font-family:var(--sans);font-weight:700;font-size:11px;color:var(--ink-40);}
+
+.task{position:relative;background:var(--card);border:1px solid var(--ink-20);border-radius:16px;padding:10px 13px;margin-bottom:9px;box-shadow:0 10px 20px -18px rgba(36,32,26,.5);overflow:hidden;}
+.task::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ink-20);}
+.task .tt{font-family:var(--zh);font-weight:600;font-size:14.5px;line-height:1.3;}
+.swipe-tip{font-family:var(--sans);font-weight:600;font-size:10px;color:var(--ink-40);margin:-2px 0 9px;}
+.swipe-tip .l{color:var(--leaf)} .swipe-tip .r{color:var(--q3)}
+.task .hint{display:flex;align-items:center;gap:6px;margin-top:9px;font-family:var(--sans);font-weight:600;font-size:10.5px;color:var(--ink-40);}
+.task .hint .l{color:var(--leaf)} .task .hint .r{color:var(--q3)}
+.task.focus{padding:17px;border-color:var(--ink);box-shadow:0 18px 34px -18px rgba(36,32,26,.55);}
+.task.focus::before{width:5px;}
+.task.focus .fchip{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-weight:800;font-size:10px;letter-spacing:.07em;color:var(--pop);background:rgba(255,106,61,.12);padding:3px 9px;border-radius:999px;margin-bottom:9px;}
+.task.focus .tt{font-size:19.5px;letter-spacing:-.01em;}
+.swipe.task-sw{margin-bottom:11px;}
+.swipe-bg.done{background:rgba(79,157,94,.16);justify-content:flex-end;color:var(--leaf);}
+.task.slid-l{transform:translateX(-96px);}
+/* 领域色标（接替四象限）*/
+.task.dwork::before{background:var(--q1)} .task.dmedia::before{background:var(--q3)}
+.task.dlearn::before{background:#C2892B} .task.dfam::before{background:#8A8B6F}
+/* GTD 面包屑（为什么做）*/
+.task .crumb{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:5px;font-family:var(--sans);font-weight:600;font-size:10.5px;color:var(--ink-40);}
+.task .crumb .dom{display:inline-flex;align-items:center;gap:4px;font-weight:800;letter-spacing:.02em;}
+.task .crumb .dom .d{width:6px;height:6px;border-radius:50%;}
+.task .crumb .sep{opacity:.45;}
+.task.focus .why{display:flex;align-items:flex-start;gap:6px;margin-top:8px;font-family:var(--display);font-style:italic;font-weight:500;font-size:13px;color:var(--ink-60);line-height:1.4;}
+.task.focus .why .wl{font-family:var(--sans);font-style:normal;font-weight:800;font-size:9.5px;letter-spacing:.08em;color:var(--ink-40);background:var(--paper-2);padding:2px 7px;border-radius:999px;flex:none;margin-top:1px;}
+/* 情境标签 + 日期 */
+.task .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;}
+.tagc{padding:2px 7px;font-size:10px;}
+.stat-chip .it .pt{font-size:12px;color:#C2892B;line-height:1;}
+.tagc{display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-60);background:var(--paper-2);border:1px solid var(--ink-20);padding:3px 8px;border-radius:8px;}
+.tagc.hi{color:var(--leaf);background:rgba(79,157,94,.1);border-color:rgba(79,157,94,.28);}
+.tagc.wait{color:var(--q3);background:var(--q3-tint);border-color:rgba(62,124,119,.3);}
+.task .due{display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-weight:800;font-size:10.5px;color:var(--q1);background:var(--q1-tint);padding:3px 8px;border-radius:8px;}
+.task.someday{opacity:.55;}
+/* 顶部紧凑统计 chip */
+.stat-chip{display:inline-flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--ink-20);border-radius:999px;padding:6px 12px;box-shadow:0 8px 16px -14px rgba(36,32,26,.5);}
+.stat-chip .it{display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);font-weight:800;font-size:13.5px;color:var(--ink);}
+.stat-chip .it .fl{font-size:14px;}
+.stat-chip .it small{font-weight:700;font-size:11px;color:var(--ink-40);}
+.stat-chip .vr{width:1px;height:14px;background:var(--ink-20);}
+.stat-chip .mr{width:15px;height:15px;}
+.stat-chip .mr circle{fill:none;stroke-width:4;}
+.stat-chip .mr .b{stroke:var(--ink-20)}
+.stat-chip .mr .f{stroke:var(--leaf);stroke-linecap:round;stroke-dasharray:31.4;stroke-dashoffset:18.8;transform:rotate(-90deg);transform-origin:50% 50%;}
+/* AI 今日提示横幅（取代聚焦卡）*/
+.aibann{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#E4EEEC,#D7E5E2);border:1px solid rgba(62,124,119,.25);padding:13px 15px 12px 17px;box-shadow:0 14px 26px -22px rgba(62,124,119,.55);}
+.aibann::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--q3);}
+.aibann .eb{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.aibann .eb .lab{font-family:var(--sans);font-weight:800;font-size:9.5px;letter-spacing:.1em;color:var(--q3);text-transform:uppercase;}
+.aibann .eb .aip{font-family:var(--sans);font-weight:800;font-size:8.5px;letter-spacing:.04em;color:#fff;background:var(--q3);padding:2px 7px;border-radius:999px;}
+.aibann .nudge{font-family:var(--zh);font-weight:600;font-size:14.5px;line-height:1.45;color:var(--ink);}
+.aibann .nudge b{color:var(--q3);}
+.aibann .bf{display:flex;align-items:center;justify-content:space-between;margin-top:11px;}
+.aibann .mot{display:flex;align-items:center;gap:7px;}
+.aibann .mot .ml{font-family:var(--sans);font-weight:700;font-size:10px;color:var(--ink-60);}
+.aibann .stars{display:flex;gap:3px;}
+.aibann .stars i{width:11px;height:11px;border-radius:2px;background:var(--leaf);}
+.aibann .stars i.e{background:rgba(79,157,94,.22);}
+.aibann .swap{font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--q3);background:transparent;border:1px solid rgba(62,124,119,.4);border-radius:8px;padding:4px 10px;}
+/* AI 异步分析建议 + P 干预徽章 + 逾期态 */
+.ai-sug{display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding:8px 10px;background:rgba(62,124,119,.09);border:1px solid rgba(62,124,119,.22);border-radius:11px;font-family:var(--zh);font-size:11.5px;color:var(--ink-60);line-height:1.45;}
+.ai-sug .ic{flex:none;font-size:13px;}
+.ai-sug b{color:var(--q3);font-weight:700;}
+.badge-p{display:inline-flex;align-items:center;font-family:var(--sans);font-weight:800;font-size:9.5px;letter-spacing:.04em;color:#fff;background:var(--q3);padding:3px 8px;border-radius:8px;}
+.task.over{border-color:rgba(196,84,58,.38);}
+.task .over-meta{font-family:var(--sans);font-weight:800;font-size:10.5px;color:var(--q1);margin-top:6px;}
+/* 快速录入 FAB */
+.fab{position:absolute;right:16px;bottom:80px;z-index:26;width:46px;height:46px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:300;box-shadow:0 14px 26px -10px rgba(36,32,26,.6);}
+
+.done-row{display:flex;align-items:center;gap:10px;padding:10px 4px;opacity:.5;}
+.done-row .chk{width:20px;height:20px;border-radius:50%;background:var(--leaf);display:flex;align-items:center;justify-content:center;flex:none;}
+.done-row .dt{font-family:var(--zh);font-size:14px;text-decoration:line-through;}
+
+/* ---------- review / AI ---------- */
+.ai-card{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--ink-20);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 12px 24px -20px rgba(36,32,26,.5);}
+.ai-card .ai-ic{width:46px;height:46px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--paper-2);}
+.ai-card .at{font-family:var(--zh);font-weight:700;font-size:16px;}
+.ai-card .ad{font-family:var(--zh);font-size:12.5px;color:var(--ink-60);margin-top:3px;line-height:1.45;}
+.ai-card .ago{margin-left:auto;font-size:18px;color:var(--ink-40);}
+.ai-out{background:linear-gradient(135deg,#FBF6EC,#F2E9D7);border:1.5px solid rgba(36,32,26,.12);border-radius:20px;padding:16px 17px;margin-top:6px;box-shadow:0 16px 30px -22px rgba(36,32,26,.5);}
+.ai-out .oh{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10px;letter-spacing:.08em;color:var(--pop);background:rgba(255,106,61,.12);padding:4px 10px;border-radius:999px;}
+.ai-out .ot{font-family:var(--zh);font-weight:600;font-size:16px;margin-top:12px;line-height:1.4;}
+.ai-out .ot b{color:var(--q1);}
+.ai-out .od{font-family:var(--zh);font-size:13px;color:var(--ink-60);margin-top:8px;line-height:1.55;}
+.ai-out .od .fog{font-weight:700;color:var(--q3);}
+
+/* ===== SHEET (too hard) ===== */
+.dim{position:absolute;inset:0;background:rgba(28,24,19,.5);backdrop-filter:blur(2px);z-index:25;}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-radius:34px 34px 0 0;padding:22px 22px 30px;box-shadow:0 -20px 50px -10px rgba(0,0,0,.4);animation:sheetUp .7s .2s cubic-bezier(.22,1,.36,1) both;}
+@keyframes sheetUp{from{transform:translateY(70%);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--ink-20);margin:0 auto 18px;}
+.sheet h2{font-family:var(--display);font-weight:500;font-size:24px;letter-spacing:-.01em;line-height:1.15;}
+.sheet h2 em{font-style:italic;color:var(--q3);}
+.sheet .sub2{font-family:var(--zh);font-size:13.5px;color:var(--ink-60);margin-top:8px;line-height:1.5;}
+.reasons{display:flex;flex-direction:column;gap:11px;margin-top:20px;}
+.reason{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:18px;background:var(--card);border:1.5px solid var(--ink-20);transition:.18s;}
+.reason.sel{border-color:var(--q3);background:var(--q3-tint);}
+.reason .ic{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;background:var(--paper-2);}
+.reason .rt{font-family:var(--zh);font-weight:700;font-size:16px;}
+.reason .rmap{font-family:var(--sans);font-weight:700;font-size:10.5px;letter-spacing:.08em;color:var(--ink-40);margin-top:2px;}
+.reason .go{margin-left:auto;font-size:18px;color:var(--q3);opacity:0;transition:.18s}
+.reason.sel .go{opacity:1}
+.fog-note{margin-top:20px;text-align:center;font-family:var(--zh);font-size:12.5px;color:var(--ink-40);line-height:1.5;}
+.fog-note b{color:var(--q3);font-weight:700;}
+.q-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:999px;}
+.q-tag .dot{width:5px;height:5px;border-radius:50%;}
+
+/* ===== MICRO + LOCK ===== */
+.before{margin-top:8px;}
+.shrink-card{border-radius:20px;background:var(--card);border:1px solid var(--ink-20);padding:14px 15px;position:relative;overflow:hidden;animation:shrinkout 3.4s ease-in-out infinite;transform-origin:top center;}
+.shrink-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--q1)}
+@keyframes shrinkout{0%,32%{transform:scaleY(1);opacity:1}46%,100%{transform:scaleY(.5);opacity:.32}}
+.shrink-card .tt{font-family:var(--zh);font-weight:600;font-size:15px;margin-top:8px;}
+.arrow-down{text-align:center;font-size:22px;color:var(--q3);margin:10px 0 4px;animation:bob 1.6s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.micro{border-radius:22px;padding:16px 17px;background:linear-gradient(135deg,#EAF3E9,#DDEDE9);border:1.5px solid rgba(79,157,94,.3);position:relative;box-shadow:0 16px 30px -20px rgba(79,157,94,.6);animation:popin 3.4s ease-in-out infinite;}
+@keyframes popin{0%,40%{transform:scale(.9);opacity:.3}54%,100%{transform:scale(1);opacity:1}}
+.micro .mlab{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10.5px;letter-spacing:.06em;color:var(--leaf);background:rgba(79,157,94,.14);padding:4px 10px;border-radius:999px;}
+.micro .mtitle{font-family:var(--zh);font-weight:600;font-size:17px;margin-top:11px;line-height:1.35;}
+.micro .mtitle b{color:var(--leaf);}
+.micro .mlevel{font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);margin-top:9px;}
+.micro .mhint{display:flex;align-items:center;gap:6px;margin-top:13px;font-family:var(--sans);font-weight:600;font-size:10.5px;color:var(--ink-40);}
+.micro .mhint .l{color:var(--leaf)} .micro .mhint .r{color:var(--q3)}
+.lock{margin-top:20px;border-radius:24px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;background:linear-gradient(165deg,#2a2f3a 0%,#1d2129 60%,#161a20 100%);box-shadow:0 20px 40px -18px rgba(0,0,0,.6);}
+.lock::after{content:"";position:absolute;inset:0;opacity:.5;background:radial-gradient(300px 120px at 80% -10%,rgba(79,157,94,.25),transparent 60%);}
+.lock .lh{position:relative;display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-weight:600;font-size:11px;color:rgba(255,255,255,.55);}
+.lock .ltime{position:relative;font-family:var(--display);font-weight:500;font-size:40px;text-align:center;margin:2px 0 16px;letter-spacing:.01em;}
+.lock .ltime small{font-family:var(--sans);font-weight:600;font-size:12px;display:block;color:rgba(255,255,255,.55);letter-spacing:.04em;}
+.notif{position:relative;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);border-radius:18px;padding:12px 13px;}
+.notif .nh{display:flex;align-items:center;gap:7px;font-family:var(--sans);font-weight:700;font-size:11px;color:rgba(255,255,255,.7);}
+.notif .nh .ndot{width:15px;height:15px;border-radius:5px;background:var(--pop);display:flex;align-items:center;justify-content:center;font-size:9px;}
+.notif .nt{font-family:var(--zh);font-weight:600;font-size:14.5px;margin-top:8px;line-height:1.35;}
+.notif .nb{display:flex;gap:8px;margin-top:12px;}
+.nbtn{flex:1;text-align:center;font-family:var(--zh);font-weight:700;font-size:12.5px;padding:8px;border-radius:11px;}
+.nbtn.d{background:#fff;color:#1d2129;} .nbtn.h{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.16);}
+
+/* ===== CELEBRATION ===== */
+.celebrate{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:radial-gradient(120% 90% at 50% 30%, #FBF6EC 0%, #F1E4D2 100%);overflow:hidden;}
+.confetti{position:absolute;width:10px;height:14px;border-radius:2px;top:-20px;opacity:0;animation:fall 2.6s linear infinite;}
+@keyframes fall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(560px) rotate(540deg);opacity:0}}
+.seal{width:118px;height:118px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;position:relative;z-index:3;box-shadow:0 20px 50px -14px rgba(36,32,26,.6);animation:pop .7s cubic-bezier(.18,1.4,.4,1) both;}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.seal svg{stroke:var(--leaf);stroke-width:9;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .45s forwards;}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cel-streak{position:relative;z-index:3;margin-top:26px;font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase;}
+.cel-num{position:relative;z-index:3;font-family:var(--display);font-weight:600;font-size:76px;line-height:1;margin-top:4px;display:flex;align-items:baseline;gap:10px;justify-content:center;}
+.cel-num .from{font-size:34px;color:var(--ink-40);}
+.cel-num .to{color:var(--q1);animation:bump .6s 1s cubic-bezier(.18,1.5,.4,1) both;display:inline-block;}
+@keyframes bump{0%{transform:scale(.4) translateY(10px);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.cel-line{position:relative;z-index:3;font-family:var(--display);font-style:italic;font-weight:500;font-size:22px;margin-top:22px;color:var(--ink);}
+.cel-sub{position:relative;z-index:3;font-family:var(--zh);font-size:13px;color:var(--ink-60);margin-top:10px;}
+.cel-flame{position:relative;z-index:3;font-size:30px;margin-top:18px;animation:flick 1.6s ease-in-out infinite;}
+
+/* footer legend */
+.legend{max-width:1680px;margin:60px auto 0;color:#F4EDDF;border-top:1px solid rgba(244,237,223,.14);padding-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;}
+.legend h4{font-family:var(--sans);font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,237,223,.5);margin-bottom:12px;}
+.legend p{font-family:var(--zh);font-size:13px;line-height:1.6;color:rgba(244,237,223,.72);}
+.legend p b{color:#F4EDDF;font-weight:600;}
+.legend code{font-family:var(--sans);background:rgba(244,237,223,.08);padding:1px 6px;border-radius:5px;font-size:12px;color:#F4EDDF;}
+@media(max-width:680px){body{padding:32px 16px 60px}.brand .logo{font-size:38px}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="logo">Prompt<em>Me</em></div>
+    <div class="tag">把想法变成行动的引擎 · V1 原型（GTD + 福格 + AI）</div>
+  </div>
+  <p class="subhead">输入发生在<b>电脑</b>，执行发生在<b>手机</b>。突然想到一件事，全局热键敲一句就走——
+  经 ntfy 同步到手机<b>收件箱</b>；晚上整理、<b>加入今日</b>；卡住的那一秒 <b>[太难了]</b> 把任务降到 2 分钟、重打到锁屏；做到了，就庆祝。
+  相比 V0：砍掉日历订阅 / 飞书导入 / 四象限，新增<b>桌面捕获 + 收件箱 + 3 Tab</b>，AI 收进「复盘」。</p>
+  <div class="pill-row">
+    <span class="pill">Capture · 桌面零摩擦捕获</span>
+    <span class="pill">GTD · 收件箱 → 今日</span>
+    <span class="pill">A 能力 · 无底线降级</span>
+    <span class="pill">M 动机 · 即时庆祝</span>
+  </div>
+</header>
+
+<!-- ================= 流程一：捕获 ================= -->
+<section class="flow">
+  <div class="flow-h"><span class="fn">Flow 01</span><span class="ft">捕获 · 想到就走</span><span class="fl"></span></div>
+  <div class="board">
+
+    <!-- ① 桌面捕获 -->
+    <div class="col">
+      <div class="macstage">
+        <div class="menubar">
+          <span class="mb-ic"><span class="mb-leaf">🌱</span>PromptMe</span>
+          <span class="mb-t">⌥Space</span>
+        </div>
+        <div class="connector"></div>
+        <div class="macwin">
+          <div class="macbar">
+            <span class="traffic"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+            <span class="wt">PromptMe 捕获 · <b>记一笔</b></span>
+          </div>
+          <div class="cap-body">
+            <div class="cap-prompt">想到什么先记下来——<b>之后在手机里整理</b>，别打断手头的活。</div>
+            <div class="cap-input"><span class="txt">研究 MCP 协议</span><span class="caret"></span></div>
+            <div class="cap-foot">
+              <span class="hint"><span class="kbd">esc</span> 收起</span>
+              <span class="cap-send">↵ 回车 → 推送到手机 ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><div class="ct">桌面捕获（菜单栏）</div><div class="cd"><span class="num">1</span>常驻菜单栏，全局热键 <code>⌥Space</code> 唤出输入框，回车即推送、自动隐藏。耗时约 3 秒，启动成本→0。</div></div>
+    </div>
+
+    <!-- ② 收件箱 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>21:30</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="scroll tabbed"><div class="pad">
+          <div class="scr-h"><h1>收件箱</h1><span class="sub">3 条待整理</span></div>
+          <div class="swipehint"><span class="l">← 左滑 加入今日</span> · <span class="r">右滑 删除 →</span></div>
+
+          <!-- 一条演示左滑，露出「加入今日」 -->
+          <div class="swipe">
+            <div class="swipe-bg add"><span class="sa">加入今日 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span></div>
+            <div class="inb slid-l">
+              <div class="it">研究 MCP 协议</div>
+              <div class="meta"><span class="src desk">💻 桌面</span>· 刚刚</div>
+            </div>
+          </div>
+
+          <div class="inb inb-mb">
+            <div class="it">学习 LangGraph 第一章</div>
+            <div class="meta"><span class="src desk">💻 桌面</span>· 今天 14:02</div>
+          </div>
+          <div class="inb inb-mb">
+            <div class="it">给奶奶约下周复查</div>
+            <div class="meta"><span class="src">✍️ 手记</span>· 昨天</div>
+          </div>
+        </div></div>
+
+        <div class="tabbar">
+          <div class="tab on">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l1.5 2.5h7L17 13h4"/><path d="M5 13l1.8-7h10.4L19 13v5H5z"/></svg>
+            <span class="tl">收件箱</span><span class="badge">3</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7h10M10 12h10M10 17h10"/><path d="M4 7l1.3 1.3L7.5 6M4 12l1.3 1.3L7.5 11M4 17l1.3 1.3L7.5 16"/></svg>
+            <span class="tl">待办</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+            <span class="tl">复盘</span>
+          </div>
+        </div>
+      </div></div>
+      <div class="caption"><div class="ct">收件箱 Inbox</div><div class="cd"><span class="num">2</span>桌面捕获原样落这（手机也可 + 手记）。<b style="color:#F4EDDF">左滑加入今日</b>、右滑删除。不污染「今日」，符合 GTD 先收集再整理。</div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= 流程二：整理 → 执行 ================= -->
+<section class="flow">
+  <div class="flow-h"><span class="fn">Flow 02</span><span class="ft">整理 → 执行 · 福格对抗</span><span class="fl"></span></div>
+  <div class="board">
+
+    <!-- ③ 今日 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="scroll tabbed"><div class="pad">
+          <div class="scr-h">
+            <div><div class="date">6月5日 · 周四</div><h1>待办</h1></div>
+            <div class="stat-chip">
+              <span class="it"><span class="fl">🔥</span>7</span>
+              <span class="vr"></span>
+              <span class="it"><svg class="mr" viewBox="0 0 15 15"><circle class="b" cx="7.5" cy="7.5" r="5"/><circle class="f" cx="7.5" cy="7.5" r="5"/></svg>2<small>/5</small></span>
+              <span class="vr"></span>
+              <span class="it"><span class="pt">★</span>1,280<small>分</small></span>
+            </div>
+          </div>
+
+          <!-- AI 今日提示横幅（取代聚焦卡）-->
+          <div class="aibann" style="margin-top:14px">
+            <div class="eb"><span class="lab">今日此刻 · P</span><span class="aip">AI</span></div>
+            <div class="nudge">先<b>打开编辑器、写一行注释</b>就行——「写 Java 代码」启动只要这一步。</div>
+            <div class="bf">
+              <div class="mot"><span class="ml">动机</span><div class="stars"><i></i><i></i><i></i><i class="e"></i><i class="e"></i></div></div>
+              <button class="swap">↻ 换一条</button>
+            </div>
+          </div>
+
+          <!-- 今日待办（置顶优先） -->
+          <div class="sec" style="margin-top:18px">
+            <div class="sec-h"><span class="t">★ 今日待办</span><span class="ln"></span><span class="c">3 件</span></div>
+            <div class="swipe-tip"><span class="l">← 左滑做到了</span> · <span class="r">右滑太难了 →</span></div>
+
+            <div class="task dwork">
+              <div class="tt">写 Java 代码</div>
+              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>订单系统重构</div>
+              <div class="tags"><span class="tagc">@电脑</span><span class="tagc hi">⚡ 高精力</span></div>
+            </div>
+
+            <div class="swipe task-sw">
+              <div class="swipe-bg done"><span class="sa">我做到了 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span></div>
+              <div class="task dmedia slid-l">
+                <div class="tt">小红书笔记调研与选题</div>
+                <div class="crumb"><span class="dom" style="color:var(--q3)"><span class="d" style="background:var(--q3)"></span>自媒体</span><span class="sep">›</span>小红书 5W 粉</div>
+                <div class="tags"><span class="tagc">@电脑</span><span class="tagc">低精力</span></div>
+              </div>
+            </div>
+
+            <div class="task dwork over">
+              <div class="tt">整理 API 文档</div>
+              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>开放平台</div>
+              <div class="over-meta">⏰ 已推迟 2 次</div>
+              <div class="tags"><span class="tagc">@电脑</span><span class="badge-p">需提示</span></div>
+              <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：老被推迟、多半动机低（M）。试试「只写文档大纲标题」就算完成。</div></div>
+            </div>
+
+            <div class="sec-h" style="margin-top:8px"><span class="t">已完成</span><span class="ln"></span><span class="c">2</span></div>
+            <div class="done-row"><span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span class="dt">晨间锻炼 20 分钟</span></div>
+            <div class="done-row"><span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span class="dt">回 3 封邮件</span></div>
+          </div>
+
+          <!-- 下一步行动（无日期） -->
+          <div class="sec" style="margin-top:20px">
+            <div class="sec-h"><span class="t">下一步行动</span><span class="ln"></span><span class="c">无日期</span></div>
+            <div class="task dwork">
+              <div class="tt">回复设计评审意见</div>
+              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>周会跟进</div>
+              <div class="tags"><span class="tagc">@电脑</span></div>
+            </div>
+            <div class="task dfam">
+              <div class="tt">给奶奶约下周复查</div>
+              <div class="crumb"><span class="dom" style="color:#8A8B6F"><span class="d" style="background:#8A8B6F"></span>家庭</span></div>
+              <div class="tags"><span class="tagc">@电话</span><span class="tagc wait">等待回电</span></div>
+              <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：打个电话 2 分钟就能定（A 低），别拖成心事。</div></div>
+            </div>
+          </div>
+
+          <!-- 即将到来（有日期） -->
+          <div class="sec" style="margin-top:20px">
+            <div class="sec-h"><span class="t">即将到来</span><span class="ln"></span><span class="c">有日期</span></div>
+            <div class="task dwork">
+              <div class="tt">去香港出差 3 天</div>
+              <div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>客户对接</div>
+              <div class="tags"><span class="due">📅 6月12日</span><span class="tagc">@外出</span></div>
+            </div>
+          </div>
+
+          <!-- 将来也许 -->
+          <div class="sec" style="margin-top:20px">
+            <div class="sec-h"><span class="t">将来也许</span><span class="ln"></span><span class="c">someday</span></div>
+            <div class="task dlearn someday">
+              <div class="tt">研究 MCP 协议</div>
+              <div class="tags"><span class="tagc">@电脑</span></div>
+            </div>
+            <div class="task dlearn someday">
+              <div class="tt">学习 LangGraph</div>
+              <div class="tags"><span class="tagc">@电脑</span></div>
+              <div class="ai-sug"><span class="ic">🔮</span><div><b>AI 分析</b>：目标偏大、不满足 A。建议拆成「读官方教程第一章」再进今日。</div></div>
+            </div>
+          </div>
+        </div></div>
+
+        <div class="fab">＋</div>
+        <div class="tabbar">
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l1.5 2.5h7L17 13h4"/><path d="M5 13l1.8-7h10.4L19 13v5H5z"/></svg>
+            <span class="tl">收件箱</span><span class="badge">3</span>
+          </div>
+          <div class="tab on">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7h10M10 12h10M10 17h10"/><path d="M4 7l1.3 1.3L7.5 6M4 12l1.3 1.3L7.5 11M4 17l1.3 1.3L7.5 16"/></svg>
+            <span class="tl">待办</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+            <span class="tl">复盘</span>
+          </div>
+        </div>
+      </div></div>
+      <div class="caption"><div class="ct">待办 · GTD + AI</div><div class="cd"><span class="num">3</span>顶部 <b style="color:#F4EDDF">AI 提示横幅</b>（降门槛 nudge + 动机星级 + 换一条）取代聚焦卡；下面今日待办置顶，其余按 下一步 / 即将 / 将来也许 分类。每条带领域色标 + 面包屑 + 情境标签；<b style="color:#F4EDDF">AI 异步分析</b>给逾期/偏大项打「需提示」并建议变小；右下 <b style="color:#F4EDDF">＋</b> 随手记。</div></div>
+    </div>
+
+    <!-- ④ 复盘 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>21:40</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="scroll tabbed"><div class="pad">
+          <div class="scr-h"><div><div class="date">复盘 · AI</div><h1>让 AI <em>帮一把</em></h1></div></div>
+
+          <div class="sec" style="margin-top:18px">
+            <div class="ai-card"><div class="ai-ic">✨</div><div><div class="at">整理今日</div><div class="ad">给今日任务排个先后，挑出此刻最该做的一件。</div></div><span class="ago">→</span></div>
+            <div class="ai-card"><div class="ai-ic">🔍</div><div><div class="at">复盘未完成</div><div class="ad">看哪几件总没做、卡在 M / A / P 哪一环。</div></div><span class="ago">→</span></div>
+
+            <div class="ai-out">
+              <span class="oh">✨ AI 整理 · 今日聚焦</span>
+              <div class="ot">先做「<b>写 Java 代码</b>」</div>
+              <div class="od">重要、且你已<span class="fog">抗拒 2 天</span>——别整段安排，启动只要「打开编辑器写第一行」。其余 4 件按精力往后排：评审意见趁上午、读书放晚上。</div>
+            </div>
+          </div>
+        </div></div>
+
+        <div class="tabbar">
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l1.5 2.5h7L17 13h4"/><path d="M5 13l1.8-7h10.4L19 13v5H5z"/></svg>
+            <span class="tl">收件箱</span><span class="badge">3</span>
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7h10M10 12h10M10 17h10"/><path d="M4 7l1.3 1.3L7.5 6M4 12l1.3 1.3L7.5 11M4 17l1.3 1.3L7.5 16"/></svg>
+            <span class="tl">待办</span>
+          </div>
+          <div class="tab on">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
+            <span class="tl">复盘</span>
+          </div>
+        </div>
+      </div></div>
+      <div class="caption"><div class="ct">复盘 · AI</div><div class="cd"><span class="num">4</span>AI 只在这屏出现：整理今日（排序 + 聚焦）、复盘未完成（定位 M/A/P）。有明确存在理由，不滥用。</div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= 流程三：福格闭环 ================= -->
+<section class="flow">
+  <div class="flow-h"><span class="fn">Flow 03</span><span class="ft">卡住 → 变小 → 做到了</span><span class="fl"></span></div>
+  <div class="board">
+
+    <!-- ⑤ 太难了 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:42</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="scroll"><div class="pad" style="filter:saturate(.9)">
+          <div class="scr-h"><div><div class="date">6月5日 · 周四</div><h1>待办</h1></div><div class="mark">Prompt<b>·</b></div></div>
+          <div class="sec" style="margin-top:16px"><div class="sec-h"><span class="t">★ 今日待办</span><span class="ln"></span></div>
+            <div class="task dwork"><div class="tt">写 Java 代码</div><div class="crumb"><span class="dom" style="color:var(--q1)"><span class="d" style="background:var(--q1)"></span>工作</span><span class="sep">›</span>订单系统重构</div></div>
+          </div>
+        </div></div>
+
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <h2>这件事<em>太难了</em>？<br>没关系，我把它变小。</h2>
+          <div class="sub2">选一个原因——我会据此把「写 Java 代码」降到 2 分钟。</div>
+          <div class="reasons">
+            <div class="reason"><span class="ic">🌫️</span><div><div class="rt">忘记了</div><div class="rmap">P · 提示没接住</div></div><span class="go">→</span></div>
+            <div class="reason sel"><span class="ic">🪫</span><div><div class="rt">太累了</div><div class="rmap">A · 能力 / 精力不够</div></div><span class="go">→</span></div>
+            <div class="reason"><span class="ic">🫥</span><div><div class="rt">没动力</div><div class="rmap">M · 动机不足</div></div><span class="go">→</span></div>
+          </div>
+          <div class="fog-note"><b>降低门槛不是放弃。</b><br>动机推不动、累也消不掉，但「变小」永远做得到。</div>
+        </div>
+      </div></div>
+      <div class="caption"><div class="ct">太难了 → 选原因</div><div class="cd"><span class="num">5</span>右滑「太难了」弹出。选原因即给行为打标（喂「复盘」），三项对应 P / A / M。被接住、不羞耻。</div></div>
+    </div>
+
+    <!-- ⑥ 微习惯 + 锁屏 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:42</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="scroll"><div class="pad">
+          <div class="sec-h" style="margin-top:6px"><span class="t">已为你变小</span><span class="ln"></span><span class="c">太累 · A</span></div>
+          <div class="before">
+            <div class="shrink-card">
+              <span class="q-tag" style="color:var(--q1);background:var(--q1-tint)"><span class="dot" style="background:var(--q1)"></span>原任务</span>
+              <div class="tt">写 Java 代码</div>
+            </div>
+            <div class="arrow-down">↓</div>
+            <div class="micro">
+              <span class="mlab">⚡ 2 分钟微习惯</span>
+              <div class="mtitle">只<b>打开</b>编辑器，<br>写<b>一行注释</b>就行。</div>
+              <div class="mlevel">无底线降级 · 第 1 级　|　还嫌难？再右滑继续变小</div>
+              <div class="mhint"><span class="l">← 左滑 我做到了</span> · <span class="r">右滑 还是难 →</span></div>
+            </div>
+          </div>
+          <div class="lock">
+            <div class="lh"><span>🔒 锁屏</span><span>周四 6月5日</span></div>
+            <div class="ltime">16:42<small>已刷新提示</small></div>
+            <div class="notif">
+              <div class="nh"><span class="ndot">P</span> PROMPTME · 现在只要 2 分钟</div>
+              <div class="nt">只打开编辑器，写一行注释就行。</div>
+              <div class="nb"><span class="nbtn d">✓ 做到了</span><span class="nbtn h">↓ 太难了</span></div>
+            </div>
+          </div>
+        </div></div>
+      </div></div>
+      <div class="caption"><div class="ct">无底线降级 → 锁屏</div><div class="cd"><span class="num">6</span>任务视觉上「缩」成 2 分钟微习惯，并刷到锁屏常驻提示。还嫌难？再右滑继续变小，永远做得到。</div></div>
+    </div>
+
+    <!-- ⑦ 庆祝 -->
+    <div class="col">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>17:05</span><span class="sig">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/><rect x="2" y="2" width="12.5" height="7" rx="1.5" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="1" fill="currentColor"/></svg>
+        </span></div>
+        <div class="celebrate">
+          <span class="confetti" style="left:12%;background:var(--q1);animation-delay:0s"></span>
+          <span class="confetti" style="left:20%;background:#C2892B;animation-delay:.5s"></span>
+          <span class="confetti" style="left:30%;background:var(--leaf);animation-delay:1s;width:8px;height:8px;border-radius:50%"></span>
+          <span class="confetti" style="left:42%;background:var(--pop);animation-delay:.2s"></span>
+          <span class="confetti" style="left:55%;background:var(--q3);animation-delay:.9s"></span>
+          <span class="confetti" style="left:64%;background:#C2892B;animation-delay:1.4s;width:8px;height:8px;border-radius:50%"></span>
+          <span class="confetti" style="left:74%;background:var(--q1);animation-delay:.4s"></span>
+          <span class="confetti" style="left:84%;background:var(--pop);animation-delay:1.1s"></span>
+          <span class="confetti" style="left:90%;background:var(--leaf);animation-delay:.7s"></span>
+          <span class="confetti" style="left:48%;background:#C2892B;animation-delay:1.8s"></span>
+          <span class="confetti" style="left:8%;background:var(--pop);animation-delay:1.6s;width:8px;height:8px;border-radius:50%"></span>
+          <span class="confetti" style="left:68%;background:var(--leaf);animation-delay:2.1s"></span>
+
+          <div class="seal"><svg width="58" height="58" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+          <div class="cel-streak">连续天数 +1</div>
+          <div class="cel-num"><span class="from">7</span>→<span class="to">8</span></div>
+          <div class="cel-line">做到了。这就是积累。</div>
+          <div class="cel-sub">本周第 12 个微胜利 · 超过你上周 30%</div>
+          <div class="cel-flame">🔥</div>
+        </div>
+      </div></div>
+      <div class="caption"><div class="ct">我做到了 → 庆祝</div><div class="cd"><span class="num">7</span>福格的 celebration：彩纸 + 连续天数跳动 + 一句肯定，把正向情绪当场焊进习惯回路。</div></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="legend">
+  <div>
+    <h4>数据怎么流</h4>
+    <p>桌面捕获经 <b>ntfy</b>（无账号 HTTP 推送）同步到手机收件箱；手机开 App / 下拉拉取。<b>单向 电脑→手机</b>，topic 用长随机串当口令。手机端只整理与执行，<code>不重录</code>。</p>
+  </div>
+  <div>
+    <h4>相比 V0 变了什么</h4>
+    <p>砍掉<b>日历订阅 / 飞书导入 / 四象限</b>；新增<b>桌面捕获 + 收件箱 + 3 Tab</b>（收件箱 / 待办 / 复盘）。待办屏按 <b>GTD 智能清单</b>（今日 / 下一步 / 即将到来 / 将来也许）组织，<b>领域色标 + 面包屑 + 情境标签</b>接替四象限；统计缩到右上角；保留<b>正反馈 + 福格闭环</b>。</p>
+  </div>
+  <div>
+    <h4>AI 在哪出现（吸收参考稿，配色用我们的）</h4>
+    <p>顶部 <b>提示横幅</b>：此刻就做的降门槛一步 + 动机星级 + 换一条；后台 <b>异步分析</b>每条是否合理、是否满足 M/A/P，给逾期 / 偏大项打 <code>需提示</code> 并建议变小；<b>复盘</b>屏做整理 / 复盘。不取参考稿的蓝色。</p>
+  </div>
+  <div>
+    <h4>字体与气质</h4>
+    <p>沿用 V0：Fraunces（柔衬线）做大字与数字，PingFang SC 做中文正文。米色纸感 + 颗粒，刻意做成「手记 / 教练」而非「待办压迫感」。</p>
+  </div>
+  <div>
+    <h4>这是原型，不是终稿</h4>
+    <p>用于对齐 V1 的视觉与交互手感，定稿后据此写 Flutter 实现计划。颜色、字号、文案、流程都可改——告诉我哪里不对。</p>
+  </div>
+</section>
+
+</body>
+</html>
