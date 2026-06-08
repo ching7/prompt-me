@@ -60,6 +60,12 @@ dev_dependencies:
   drift_dev: ^2.33.0
   build_runner: ^2.15.0
 
+# 不从 GitHub 下载 sqlite3 预编译库（国内常超时）；改用系统库 / sqlite3_flutter_libs 打包的库。
+hooks:
+  user_defines:
+    sqlite3:
+      source: system
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
