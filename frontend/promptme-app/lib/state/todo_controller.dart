@@ -26,13 +26,15 @@ class TodoController {
         title: text, domain: domain, scheduledDate: today);
   }
 
-  /// 完成 / 重开 / 删除：复用 TodayController（含事件记录）。
+  /// 完成 / 重开 / 删除 / 太难了：复用 TodayController（含事件记录）。
   Future<void> complete(int id) =>
       ref.read(todayControllerProvider).complete(id);
   Future<void> reopen(int id) =>
       ref.read(todayControllerProvider).reopen(id);
   Future<void> delete(int id) =>
       ref.read(todayControllerProvider).deleteTask(id);
+  Future<void> tooHard(int id, FailureReason reason) =>
+      ref.read(todayControllerProvider).tooHard(id, reason);
 }
 
 final todoControllerProvider =

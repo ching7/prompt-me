@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database.dart';
+import '../../domain/enums.dart';
 import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
 import '../inbox/capture_sheet.dart';
+import '../today/widgets/celebration_overlay.dart';
 import 'stats_chip.dart';
 import 'todo_card.dart';
+import 'too_hard_sheet.dart';
 
 class TodoScreen extends ConsumerWidget {
   const TodoScreen({super.key});
@@ -27,6 +30,28 @@ class TodoScreen extends ConsumerWidget {
           ref.read(todoControllerProvider).addToday(text: text, domain: domain);
           Navigator.of(context).pop();
         },
+      ),
+    );
+  }
+
+  void _celebrate(BuildContext context, int streak) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => CelebrationOverlay(
+        streak: streak,
+        onDismiss: () => Navigator.of(ctx).maybePop(),
+      ),
+    );
+  }
+
+  Future<FailureReason?> _askReason(BuildContext context, String title) {
+    return showModalBottomSheet<FailureReason>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => TooHardSheet(
+        taskTitle: title,
+        onReason: (r) => Navigator.of(context).pop(r),
       ),
     );
   }
@@ -69,7 +94,7 @@ class TodoScreen extends ConsumerWidget {
                 if (view.pending.isEmpty)
                   _empty('今天还没排任务 · 按 + 加一件')
                 else
-                  for (final t in view.pending) _card(ctl, t, false),
+                  for (final t in view.pending) _pendingTile(context, ctl, t, streak),
                 if (view.done.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _sectionHeader('已完成', '${view.done.length}'),
@@ -92,6 +117,42 @@ class TodoScreen extends ConsumerWidget {
         rolloverCount: t.rolloverCount,
         onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
       );
+
+  Widget _pendingTile(
+      BuildContext context, TodoController ctl, Task t, int streak) {
+    final title = (t.currentPromptText?.isNotEmpty ?? false)
+        ? t.currentPromptText!
+        : t.title;
+    return Dismissible(
+      key: ValueKey('todo-${t.id}'),
+      background: Container(
+        alignment: Alignment.centerLeft,
+        color: AppColors.q3, // 右滑 → 太难了
+        padding: const EdgeInsets.only(left: 20),
+        child: const Text('太难了',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        color: AppColors.leaf, // 左滑 → 我做到了
+        padding: const EdgeInsets.only(right: 20),
+        child: const Text('我做到了 ✓',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      ),
+      confirmDismiss: (dir) async {
+        if (dir == DismissDirection.endToStart) {
+          await ctl.complete(t.id);
+          if (context.mounted) _celebrate(context, streak);
+          return true; // 从今日待办移除（stream 会把它放进已完成）
+        } else {
+          final reason = await _askReason(context, title);
+          if (reason != null) await ctl.tooHard(t.id, reason);
+          return false; // 不移除：降级后卡片经 stream 变微习惯
+        }
+      },
+      child: _card(ctl, t, false),
+    );
+  }
 
   Widget _sectionHeader(String title, String count) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
