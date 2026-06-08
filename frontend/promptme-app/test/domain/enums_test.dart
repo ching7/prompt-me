@@ -20,4 +20,12 @@ void main() {
     expect(FailureReason.tired.foggFactor, 'A');
     expect(FailureReason.noMotivation.foggFactor, 'M');
   });
+
+  test('TaskSource.capture 追加在末尾、index=2', () {
+    expect(TaskSource.values.length, 3);
+    expect(TaskSource.capture.index, 2);
+    // 既有值索引不变（intEnum 存的是 index，不能挪动）
+    expect(TaskSource.manual.index, 0);
+    expect(TaskSource.feishu.index, 1);
+  });
 }

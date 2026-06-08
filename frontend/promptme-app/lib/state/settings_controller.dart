@@ -8,7 +8,6 @@ class SettingsController {
   static const _kKey = 'ai_key';
   static const _kBaseUrl = 'ai_base_url';
   static const _kModel = 'ai_model';
-  static const _kSubUrl = 'subscription_url';
 
   AiConfig get aiConfig => AiConfig(
         apiKey: _prefs.getString(_kKey) ?? '',
@@ -26,7 +25,4 @@ class SettingsController {
     if (model != null) await _prefs.setString(_kModel, model);
   }
 
-  String? get pendingSubscriptionUrl => _prefs.getString(_kSubUrl);
-  Future<void> saveSubscriptionUrl(String url) =>
-      _prefs.setString(_kSubUrl, url);
 }

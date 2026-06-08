@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/database.dart';
 import '../../services/ai/ai_client.dart';
 import '../../services/ai/ai_config.dart';
 import '../../state/integration_providers.dart';
-import '../../state/providers.dart';
 import '../../theme/app_colors.dart';
-import 'feishu_import_sheet.dart';
 
 /// OpenAI 兼容服务商预设：点一下自动填 Base URL（与模型）。
 class _AiPreset {
@@ -29,8 +26,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _subName = TextEditingController();
-  final _subUrl = TextEditingController();
   final _aiKey = TextEditingController();
   final _baseUrl = TextEditingController();
   final _model = TextEditingController();
@@ -53,8 +48,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   void dispose() {
-    _subName.dispose();
-    _subUrl.dispose();
     _aiKey.dispose();
     _baseUrl.dispose();
     _model.dispose();
@@ -85,45 +78,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _model.text = match.first.model;
       }
     });
-  }
-
-  // ---- 苹果日历订阅 ----
-
-  Future<void> _addSubscription() async {
-    final url = _subUrl.text.trim();
-    if (url.isEmpty) return;
-    final name = _subName.text.trim().isEmpty ? '我的日历' : _subName.text.trim();
-    final db = ref.read(databaseProvider);
-    // 同 URL 复用，避免重复添加导致事件翻倍。
-    final existing = await db.calendarDao.subscriptionsList();
-    final match = existing.where((s) => s.url == url).toList();
-    final id = match.isNotEmpty
-        ? match.first.id
-        : await db.calendarDao.addSubscription(
-            SubscriptionsCompanion.insert(url: url, displayName: name));
-    await _fetchInto(id, url, label: '订阅已拉取');
-    if (mounted) {
-      _subUrl.clear();
-      _subName.clear();
-    }
-  }
-
-  Future<void> _fetchInto(int id, String url, {required String label}) async {
-    final db = ref.read(databaseProvider);
-    try {
-      final total = await ref.read(subscriptionServiceProvider).refresh(id, url);
-      final todayN =
-          (await db.calendarDao.eventsForDate(ref.read(selectedDateProvider)))
-              .length;
-      _toast('$label：共 $total 个事件，今天 $todayN 个');
-    } catch (e) {
-      _toast('拉取失败：$e');
-    }
-  }
-
-  Future<void> _deleteSubscription(Subscription sub) async {
-    await ref.read(databaseProvider).calendarDao.deleteSubscription(sub.id);
-    _toast('已删除「${sub.displayName}」');
   }
 
   // ---- AI ----
@@ -171,14 +125,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subs = ref.watch(subscriptionsProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('设置'), backgroundColor: AppColors.paper),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         children: [
-          _calendarCard(subs),
-          _feishuCard(),
           _aiCard(),
         ],
       ),
@@ -186,76 +137,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // ---------------- 卡片 ----------------
-
-  Widget _calendarCard(AsyncValue<List<Subscription>> subs) => _card(
-        title: '苹果日历订阅',
-        subtitle: '粘贴 iCloud published 链接，拉取时间块到「今日」。',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _subName,
-              decoration: _dec('名称（可选，如：工作 / 家庭）'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _subUrl,
-              keyboardType: TextInputType.url,
-              decoration:
-                  _dec('https://p…-caldav.icloud.com.cn/published/…'),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _addSubscription,
-                child: const Text('添加并拉取'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            subs.when(
-              loading: () => const SizedBox.shrink(),
-              error: (e, _) => Text('订阅列表出错：$e',
-                  style: const TextStyle(color: AppColors.q1)),
-              data: (list) => Column(
-                children: [
-                  for (final sub in list) _subTile(sub),
-                  if (list.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('还没有订阅。粘贴 published 链接添加。',
-                            style: TextStyle(
-                                color: AppColors.ink40, fontSize: 13)),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _feishuCard() => _card(
-        title: '飞书任务导入',
-        subtitle: '从飞书复制四象限任务的 Markdown，粘贴导入到今日。',
-        child: SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.content_paste, size: 18),
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: AppColors.paper,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-              builder: (_) => const FeishuImportSheet(),
-            ),
-            label: const Text('粘贴 Markdown 导入'),
-          ),
-        ),
-      );
 
   Widget _aiCard() => _card(
         title: 'AI（自带 key）',
@@ -451,44 +332,4 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
-
-  Widget _subTile(Subscription sub) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-        decoration: BoxDecoration(
-            color: AppColors.paper,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.ink20)),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sub.displayName,
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text(
-                    sub.lastFetchedAt == null ? '未拉取' : sub.url,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: AppColors.ink40),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh, size: 20, color: AppColors.ink60),
-              tooltip: '重新拉取',
-              onPressed: () => _fetchInto(sub.id, sub.url, label: '已重新拉取'),
-            ),
-            IconButton(
-              icon:
-                  const Icon(Icons.delete_outline, size: 20, color: AppColors.q1),
-              tooltip: '删除',
-              onPressed: () => _deleteSubscription(sub),
-            ),
-          ],
-        ),
-      );
 }

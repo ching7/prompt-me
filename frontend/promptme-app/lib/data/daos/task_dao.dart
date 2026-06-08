@@ -10,6 +10,28 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
 
   Future<int> insertTask(TasksCompanion task) => into(tasks).insert(task);
 
+  /// 捕获一条：source=capture，scheduledDate=null 进收件箱、=今天进待办。
+  Future<int> insertCapture({
+    required String title,
+    String? domain,
+    DateTime? scheduledDate,
+  }) =>
+      into(tasks).insert(TasksCompanion.insert(
+        title: title,
+        quadrant: Quadrant.importantUrgent, // 占位，UI 不用
+        source: TaskSource.capture,
+        domain: Value(domain),
+        scheduledDate: Value(scheduledDate),
+      ));
+
+  /// 收件箱 = 无排期且待办，新→旧。
+  Stream<List<Task>> watchInbox() => (select(tasks)
+        ..where((t) =>
+            t.scheduledDate.isNull() &
+            t.status.equalsValue(TaskStatus.pending))
+        ..orderBy([(t) => OrderingTerm.desc(t.id)]))
+      .watch();
+
   Future<Task?> getById(int id) =>
       (select(tasks)..where((t) => t.id.equals(id))).getSingleOrNull();
 
@@ -55,6 +77,21 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
         currentPromptText: Value(microText),
         downgradeLevel: Value(level),
       ));
+
+  /// 加入今日：scheduledDate=今天（仅日期），首次排期记 firstScheduledDate。
+  Future<void> addToToday(int id, DateTime today) async {
+    final dateOnly = DateTime(today.year, today.month, today.day);
+    final existing = await getById(id);
+    await (update(tasks)..where((t) => t.id.equals(id))).write(TasksCompanion(
+      scheduledDate: Value(dateOnly),
+      firstScheduledDate: Value(existing?.firstScheduledDate ?? dateOnly),
+    ));
+  }
+
+  /// 设/清领域标签。
+  Future<void> setDomain(int id, String? domain) =>
+      (update(tasks)..where((t) => t.id.equals(id)))
+          .write(TasksCompanion(domain: Value(domain)));
 
   /// 所有已完成任务的「完成日期」集合（用于连续天数）。
   Future<Set<DateTime>> completionDays() async {

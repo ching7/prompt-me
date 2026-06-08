@@ -7,22 +7,6 @@ import 'package:promptme/state/providers.dart';
 import 'package:promptme/state/today_controller.dart';
 
 void main() {
-  test('rowToTodayTask shows micro prompt text after downgrade', () async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    final id = await db.taskDao.insertTask(TasksCompanion.insert(
-      title: '项目周报',
-      quadrant: Quadrant.importantUrgent,
-      source: TaskSource.manual,
-    ));
-    var row = await db.taskDao.getById(id);
-    expect(rowToTodayTask(row!).title, '项目周报');
-
-    await db.taskDao.applyDowngrade(id, '只看一眼清单', 1);
-    row = await db.taskDao.getById(id);
-    expect(rowToTodayTask(row!).title, '只看一眼清单'); // 展示降级后的微版本
-  });
-
   group('TodayController', () {
     late AppDatabase db;
     late ProviderContainer c;

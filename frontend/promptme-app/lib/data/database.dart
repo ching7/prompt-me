@@ -6,7 +6,6 @@ import 'package:path/path.dart' as p;
 import '../domain/enums.dart';
 import 'daos/task_dao.dart';
 import 'daos/task_event_dao.dart';
-import 'daos/calendar_dao.dart';
 
 part 'database.g.dart';
 
@@ -32,6 +31,7 @@ class Tasks extends Table {
   DateTimeColumn get firstScheduledDate => dateTime().nullable()();
   TextColumn get currentPromptText => text().nullable()();
   IntColumn get downgradeLevel => integer().withDefault(const Constant(0))();
+  TextColumn get domain => text().nullable()();
 }
 
 class TaskEvents extends Table {
@@ -63,13 +63,23 @@ class CalendarEvents extends Table {
 
 @DriftDatabase(
   tables: [Projects, Tasks, TaskEvents, Subscriptions, CalendarEvents],
-  daos: [TaskDao, TaskEventDao, CalendarDao],
+  daos: [TaskDao, TaskEventDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(tasks, tasks.domain);
+          }
+        },
+      );
 
   static QueryExecutor _open() {
     return LazyDatabase(() async {

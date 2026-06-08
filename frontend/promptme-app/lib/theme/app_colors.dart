@@ -22,4 +22,21 @@ class AppColors {
 
   static const pop = Color(0xFFFF6A3D); // 庆祝/动作强调
   static const leaf = Color(0xFF4F9D5E); // 完成/微习惯
+
+  /// 领域标签 → 色标。默认四领域固定色，未分类/自定义回退中性。
+  static Color domainColor(String? label) => switch (label) {
+        '工作' => q1,
+        '自媒体' => q3,
+        '学习' => q2,
+        '家庭' => q4,
+        _ => ink40,
+      };
+
+  static Color domainTint(String? label) => switch (label) {
+        '工作' => q1Tint,
+        '自媒体' => q3Tint,
+        '学习' => q2Tint,
+        '家庭' => q4Tint,
+        _ => ink20,
+      };
 }
