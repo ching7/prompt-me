@@ -85,27 +85,35 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   Widget _filterBar() {
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text('领域',
-            style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink40)),
-        for (final d in kDefaultDomains)
-          FilterChip(
-            label: Text(d),
-            selected: _domainFilter == d,
-            avatar: CircleAvatar(
-                radius: 5, backgroundColor: AppColors.domainColor(d)),
-            onSelected: (sel) =>
-                setState(() => _domainFilter = sel ? d : null),
+    return Row(children: [
+      Text('标签',
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.ink40)),
+      const SizedBox(width: 8),
+      Expanded(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final d in kDefaultDomains)
+                Padding(
+                  padding: const EdgeInsets.only(right: 7),
+                  child: FilterChip(
+                    label: Text(d),
+                    selected: _domainFilter == d,
+                    avatar: CircleAvatar(
+                        radius: 5, backgroundColor: AppColors.domainColor(d)),
+                    onSelected: (sel) =>
+                        setState(() => _domainFilter = sel ? d : null),
+                  ),
+                ),
+            ],
           ),
-      ],
-    );
+        ),
+      ),
+    ]);
   }
 
   Widget _bulkAddButton(List<int> ids) {

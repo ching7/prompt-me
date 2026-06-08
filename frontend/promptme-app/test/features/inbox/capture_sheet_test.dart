@@ -25,6 +25,19 @@ void main() {
     expect(gotDomain, '学习');
   });
 
+  testWidgets('默认选中第一个标签：不点 chip 直接提交也带标签', (tester) async {
+    String? gotDomain;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: CaptureSheet(onCapture: (_, d) => gotDomain = d),
+      ),
+    ));
+    await tester.enterText(find.byType(TextField), '随手记一条');
+    await tester.tap(find.widgetWithText(FilledButton, '记一笔'));
+    await tester.pump();
+    expect(gotDomain, '工作'); // kDefaultDomains.first
+  });
+
   testWidgets('空文本时「记一笔」不回调', (tester) async {
     var called = false;
     await tester.pumpWidget(MaterialApp(

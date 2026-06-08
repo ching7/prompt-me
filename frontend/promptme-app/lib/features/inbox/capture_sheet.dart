@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/domains.dart';
 import '../../theme/app_colors.dart';
 
-/// 手记表单：文本 + 可选领域标签 → onCapture(text, domain)。domain 为 null = 未分类。
+/// 手记表单：文本 + 标签（默认选中第一个、必选）→ onCapture(text, domain)。
 class CaptureSheet extends StatefulWidget {
   const CaptureSheet({super.key, required this.onCapture});
   final void Function(String text, String? domain) onCapture;
@@ -13,7 +13,7 @@ class CaptureSheet extends StatefulWidget {
 
 class _CaptureSheetState extends State<CaptureSheet> {
   final _ctrl = TextEditingController();
-  String? _domain;
+  String _domain = kDefaultDomains.first; // 默认选中，标签必选、不可空
 
   @override
   void dispose() {
@@ -50,20 +50,36 @@ class _CaptureSheetState extends State<CaptureSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final d in kDefaultDomains)
-                ChoiceChip(
-                  label: Text(d),
-                  selected: _domain == d,
-                  avatar: CircleAvatar(
-                      radius: 5, backgroundColor: AppColors.domainColor(d)),
-                  onSelected: (sel) =>
-                      setState(() => _domain = sel ? d : null),
+          Row(children: [
+            Text('标签',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink40)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final d in kDefaultDomains)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(d),
+                          selected: _domain == d,
+                          avatar: CircleAvatar(
+                              radius: 5,
+                              backgroundColor: AppColors.domainColor(d)),
+                          // 始终保持一个选中、不可取消（标签必选）
+                          onSelected: (_) => setState(() => _domain = d),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+          ]),
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerRight,
