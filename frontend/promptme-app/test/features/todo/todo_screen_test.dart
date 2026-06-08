@@ -46,4 +46,55 @@ void main() {
 
     expect(find.textContaining('已完成'), findsOneWidget);
   });
+
+  testWidgets('右滑太难了 → 弹 sheet → 选原因 → 任务降级(标题变微习惯)', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final c = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)]);
+    addTearDown(c.dispose);
+    await c.read(todoControllerProvider).addToday(text: '写 Java 代码', domain: '工作');
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: const MaterialApp(home: TodoScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    // 右滑(startToEnd)— fling 更可靠触发 Dismissible
+    await tester.fling(find.text('写 Java 代码'), const Offset(400, 0), 1000);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('太难了？我帮你变小'), findsOneWidget); // sheet 出现
+
+    await tester.tap(find.text('太累了'));
+    await tester.pumpAndSettle();
+
+    // 降级后原标题不再出现(被微习惯文案替代)
+    expect(find.text('写 Java 代码'), findsNothing);
+  });
+
+  testWidgets('左滑我做到了 → 完成 + 庆祝,任务进已完成', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final c = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)]);
+    addTearDown(c.dispose);
+    await c.read(todoControllerProvider).addToday(text: 'A');
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: const MaterialApp(home: TodoScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    // 左滑(endToStart)— fling 触发;庆祝有彩纸动画,用 pump(时长) 不用 pumpAndSettle(否则可能挂)
+    await tester.fling(find.text('A'), const Offset(-400, 0), 1000);
+    await tester.pump(); // 触发 confirmDismiss
+    await tester.pump(const Duration(milliseconds: 600)); // 完成 + 庆祝弹出
+    expect(find.textContaining('做到了'), findsOneWidget); // 庆祝层
+    await tester.pump(const Duration(seconds: 2)); // CelebrationOverlay 1.9s 自动消失定时器
+    await tester.pump(const Duration(milliseconds: 600));
+    // 任务已进「已完成」
+    expect(find.textContaining('已完成'), findsOneWidget);
+  });
 }
