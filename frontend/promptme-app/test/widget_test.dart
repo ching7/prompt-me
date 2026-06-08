@@ -19,7 +19,7 @@ void main() {
     expect(find.text('收件箱'), findsWidgets); // nav label + inbox screen title
     expect(find.text('待办'), findsWidgets);
     expect(find.text('复盘'), findsOneWidget);
-    expect(find.text('待办 · 占位'), findsOneWidget); // 默认选中「待办」
+    expect(find.textContaining('今日待办'), findsOneWidget); // 默认选中「待办」→ 真实待办屏
 
     await db.close();
     await tester.pump();
