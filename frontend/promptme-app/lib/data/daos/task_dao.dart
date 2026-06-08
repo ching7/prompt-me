@@ -78,6 +78,21 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
         downgradeLevel: Value(level),
       ));
 
+  /// 加入今日：scheduledDate=今天（仅日期），首次排期记 firstScheduledDate。
+  Future<void> addToToday(int id, DateTime today) async {
+    final dateOnly = DateTime(today.year, today.month, today.day);
+    final existing = await getById(id);
+    await (update(tasks)..where((t) => t.id.equals(id))).write(TasksCompanion(
+      scheduledDate: Value(dateOnly),
+      firstScheduledDate: Value(existing?.firstScheduledDate ?? dateOnly),
+    ));
+  }
+
+  /// 设/清领域标签。
+  Future<void> setDomain(int id, String? domain) =>
+      (update(tasks)..where((t) => t.id.equals(id)))
+          .write(TasksCompanion(domain: Value(domain)));
+
   /// 所有已完成任务的「完成日期」集合（用于连续天数）。
   Future<Set<DateTime>> completionDays() async {
     final rows =

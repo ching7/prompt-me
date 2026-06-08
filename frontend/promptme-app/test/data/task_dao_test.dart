@@ -55,6 +55,26 @@ void main() {
     expect(inbox.last.domain, '学习');
   });
 
+  test('addToToday 置今天日期 + 记 firstScheduledDate；setDomain 改标签', () async {
+    final id = await db.taskDao.insertCapture(title: '收件箱里的');
+    await db.taskDao.addToToday(id, d(8, 14)); // 带了时分，应只留日期
+    var t = await db.taskDao.getById(id);
+    expect(t!.scheduledDate, DateTime(2026, 6, 8));
+    expect(t.firstScheduledDate, DateTime(2026, 6, 8));
+
+    // 不再出现在收件箱
+    final inbox = await db.taskDao.watchInbox().first;
+    expect(inbox.where((x) => x.id == id), isEmpty);
+
+    await db.taskDao.setDomain(id, '工作');
+    t = await db.taskDao.getById(id);
+    expect(t!.domain, '工作');
+
+    await db.taskDao.setDomain(id, null);
+    t = await db.taskDao.getById(id);
+    expect(t!.domain, isNull);
+  });
+
   test('domain 列可写可读、默认 null', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
       title: '研究 MCP 协议',
