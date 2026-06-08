@@ -28,7 +28,7 @@ void main() {
     await ctl().capture(text: '研究 MCP 协议', domain: '学习');
     await ctl().capture(text: '没标签的');
     // 验证 inboxProvider 能正确接入 DAO stream
-    container.listen(inboxProvider, (_, __) {});
+    container.listen(inboxProvider, (_, _) {});
     final inbox = await container.read(inboxProvider.future);
     expect(inbox.map((t) => t.title), ['没标签的', '研究 MCP 协议']); // 新→旧
     expect(inbox.last.domain, '学习');

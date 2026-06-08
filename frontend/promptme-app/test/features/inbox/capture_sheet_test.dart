@@ -28,7 +28,7 @@ void main() {
   testWidgets('空文本时「记一笔」不回调', (tester) async {
     var called = false;
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: CaptureSheet(onCapture: (_, __) => called = true)),
+      home: Scaffold(body: CaptureSheet(onCapture: (_, _) => called = true)),
     ));
     await tester.tap(find.widgetWithText(FilledButton, '记一笔'));
     await tester.pump();

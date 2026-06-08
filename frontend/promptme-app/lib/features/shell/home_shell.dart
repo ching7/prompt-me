@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../inbox/inbox_screen.dart';
 import 'placeholder_screens.dart';
 
 class HomeShell extends StatefulWidget {

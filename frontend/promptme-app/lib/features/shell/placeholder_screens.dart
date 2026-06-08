@@ -8,12 +8,6 @@ class _Placeholder extends StatelessWidget {
       Center(child: Text('$label · 占位', style: const TextStyle(fontSize: 18)));
 }
 
-class InboxScreen extends StatelessWidget {
-  const InboxScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const _Placeholder('收件箱');
-}
-
 class TodoScreen extends StatelessWidget {
   const TodoScreen({super.key});
   @override
