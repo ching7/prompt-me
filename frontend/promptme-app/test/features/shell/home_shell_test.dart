@@ -21,8 +21,8 @@ void main() {
     expect(find.text('待办'), findsWidgets);
     expect(find.text('复盘'), findsOneWidget);
 
-    // 默认选中「待办」→ 待办占位屏标题可见
-    expect(find.text('待办 · 占位'), findsOneWidget);
+    // 默认选中「待办」→ 真实待办屏:今日待办区可见
+    expect(find.textContaining('今日待办'), findsOneWidget);
 
     // 切到收件箱 → 真实屏的 FAB 出现（占位屏没有 FAB）
     await tester.tap(find.text('收件箱').last);
