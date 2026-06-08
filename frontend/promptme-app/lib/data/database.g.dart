@@ -460,6 +460,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _domainMeta = const VerificationMeta('domain');
+  @override
+  late final GeneratedColumn<String> domain = GeneratedColumn<String>(
+    'domain',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -476,6 +485,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     firstScheduledDate,
     currentPromptText,
     downgradeLevel,
+    domain,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -575,6 +585,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         ),
       );
     }
+    if (data.containsKey('domain')) {
+      context.handle(
+        _domainMeta,
+        domain.isAcceptableOrUnknown(data['domain']!, _domainMeta),
+      );
+    }
     return context;
   }
 
@@ -646,6 +662,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.int,
         data['${effectivePrefix}downgrade_level'],
       )!,
+      domain: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}domain'],
+      ),
     );
   }
 
@@ -677,6 +697,7 @@ class Task extends DataClass implements Insertable<Task> {
   final DateTime? firstScheduledDate;
   final String? currentPromptText;
   final int downgradeLevel;
+  final String? domain;
   const Task({
     required this.id,
     this.projectId,
@@ -692,6 +713,7 @@ class Task extends DataClass implements Insertable<Task> {
     this.firstScheduledDate,
     this.currentPromptText,
     required this.downgradeLevel,
+    this.domain,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -732,6 +754,9 @@ class Task extends DataClass implements Insertable<Task> {
       map['current_prompt_text'] = Variable<String>(currentPromptText);
     }
     map['downgrade_level'] = Variable<int>(downgradeLevel);
+    if (!nullToAbsent || domain != null) {
+      map['domain'] = Variable<String>(domain);
+    }
     return map;
   }
 
@@ -765,6 +790,9 @@ class Task extends DataClass implements Insertable<Task> {
           ? const Value.absent()
           : Value(currentPromptText),
       downgradeLevel: Value(downgradeLevel),
+      domain: domain == null && nullToAbsent
+          ? const Value.absent()
+          : Value(domain),
     );
   }
 
@@ -798,6 +826,7 @@ class Task extends DataClass implements Insertable<Task> {
         json['currentPromptText'],
       ),
       downgradeLevel: serializer.fromJson<int>(json['downgradeLevel']),
+      domain: serializer.fromJson<String?>(json['domain']),
     );
   }
   @override
@@ -824,6 +853,7 @@ class Task extends DataClass implements Insertable<Task> {
       'firstScheduledDate': serializer.toJson<DateTime?>(firstScheduledDate),
       'currentPromptText': serializer.toJson<String?>(currentPromptText),
       'downgradeLevel': serializer.toJson<int>(downgradeLevel),
+      'domain': serializer.toJson<String?>(domain),
     };
   }
 
@@ -842,6 +872,7 @@ class Task extends DataClass implements Insertable<Task> {
     Value<DateTime?> firstScheduledDate = const Value.absent(),
     Value<String?> currentPromptText = const Value.absent(),
     int? downgradeLevel,
+    Value<String?> domain = const Value.absent(),
   }) => Task(
     id: id ?? this.id,
     projectId: projectId.present ? projectId.value : this.projectId,
@@ -863,6 +894,7 @@ class Task extends DataClass implements Insertable<Task> {
         ? currentPromptText.value
         : this.currentPromptText,
     downgradeLevel: downgradeLevel ?? this.downgradeLevel,
+    domain: domain.present ? domain.value : this.domain,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
@@ -896,6 +928,7 @@ class Task extends DataClass implements Insertable<Task> {
       downgradeLevel: data.downgradeLevel.present
           ? data.downgradeLevel.value
           : this.downgradeLevel,
+      domain: data.domain.present ? data.domain.value : this.domain,
     );
   }
 
@@ -915,7 +948,8 @@ class Task extends DataClass implements Insertable<Task> {
           ..write('rolloverCount: $rolloverCount, ')
           ..write('firstScheduledDate: $firstScheduledDate, ')
           ..write('currentPromptText: $currentPromptText, ')
-          ..write('downgradeLevel: $downgradeLevel')
+          ..write('downgradeLevel: $downgradeLevel, ')
+          ..write('domain: $domain')
           ..write(')'))
         .toString();
   }
@@ -936,6 +970,7 @@ class Task extends DataClass implements Insertable<Task> {
     firstScheduledDate,
     currentPromptText,
     downgradeLevel,
+    domain,
   );
   @override
   bool operator ==(Object other) =>
@@ -954,7 +989,8 @@ class Task extends DataClass implements Insertable<Task> {
           other.rolloverCount == this.rolloverCount &&
           other.firstScheduledDate == this.firstScheduledDate &&
           other.currentPromptText == this.currentPromptText &&
-          other.downgradeLevel == this.downgradeLevel);
+          other.downgradeLevel == this.downgradeLevel &&
+          other.domain == this.domain);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
@@ -972,6 +1008,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<DateTime?> firstScheduledDate;
   final Value<String?> currentPromptText;
   final Value<int> downgradeLevel;
+  final Value<String?> domain;
   const TasksCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
@@ -987,6 +1024,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.firstScheduledDate = const Value.absent(),
     this.currentPromptText = const Value.absent(),
     this.downgradeLevel = const Value.absent(),
+    this.domain = const Value.absent(),
   });
   TasksCompanion.insert({
     this.id = const Value.absent(),
@@ -1003,6 +1041,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.firstScheduledDate = const Value.absent(),
     this.currentPromptText = const Value.absent(),
     this.downgradeLevel = const Value.absent(),
+    this.domain = const Value.absent(),
   }) : title = Value(title),
        quadrant = Value(quadrant),
        source = Value(source);
@@ -1021,6 +1060,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<DateTime>? firstScheduledDate,
     Expression<String>? currentPromptText,
     Expression<int>? downgradeLevel,
+    Expression<String>? domain,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1038,6 +1078,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
         'first_scheduled_date': firstScheduledDate,
       if (currentPromptText != null) 'current_prompt_text': currentPromptText,
       if (downgradeLevel != null) 'downgrade_level': downgradeLevel,
+      if (domain != null) 'domain': domain,
     });
   }
 
@@ -1056,6 +1097,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<DateTime?>? firstScheduledDate,
     Value<String?>? currentPromptText,
     Value<int>? downgradeLevel,
+    Value<String?>? domain,
   }) {
     return TasksCompanion(
       id: id ?? this.id,
@@ -1072,6 +1114,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       firstScheduledDate: firstScheduledDate ?? this.firstScheduledDate,
       currentPromptText: currentPromptText ?? this.currentPromptText,
       downgradeLevel: downgradeLevel ?? this.downgradeLevel,
+      domain: domain ?? this.domain,
     );
   }
 
@@ -1128,6 +1171,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (downgradeLevel.present) {
       map['downgrade_level'] = Variable<int>(downgradeLevel.value);
     }
+    if (domain.present) {
+      map['domain'] = Variable<String>(domain.value);
+    }
     return map;
   }
 
@@ -1147,7 +1193,8 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('rolloverCount: $rolloverCount, ')
           ..write('firstScheduledDate: $firstScheduledDate, ')
           ..write('currentPromptText: $currentPromptText, ')
-          ..write('downgradeLevel: $downgradeLevel')
+          ..write('downgradeLevel: $downgradeLevel, ')
+          ..write('domain: $domain')
           ..write(')'))
         .toString();
   }
@@ -2699,6 +2746,7 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<DateTime?> firstScheduledDate,
       Value<String?> currentPromptText,
       Value<int> downgradeLevel,
+      Value<String?> domain,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
@@ -2716,6 +2764,7 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<DateTime?> firstScheduledDate,
       Value<String?> currentPromptText,
       Value<int> downgradeLevel,
+      Value<String?> domain,
     });
 
 final class $$TasksTableReferences
@@ -2831,6 +2880,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<int> get downgradeLevel => $composableBuilder(
     column: $table.downgradeLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get domain => $composableBuilder(
+    column: $table.domain,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2957,6 +3011,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get domain => $composableBuilder(
+    column: $table.domain,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProjectsTableOrderingComposer get projectId {
     final $$ProjectsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3044,6 +3103,9 @@ class $$TasksTableAnnotationComposer
     column: $table.downgradeLevel,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get domain =>
+      $composableBuilder(column: $table.domain, builder: (column) => column);
 
   $$ProjectsTableAnnotationComposer get projectId {
     final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
@@ -3136,6 +3198,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> firstScheduledDate = const Value.absent(),
                 Value<String?> currentPromptText = const Value.absent(),
                 Value<int> downgradeLevel = const Value.absent(),
+                Value<String?> domain = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
                 projectId: projectId,
@@ -3151,6 +3214,7 @@ class $$TasksTableTableManager
                 firstScheduledDate: firstScheduledDate,
                 currentPromptText: currentPromptText,
                 downgradeLevel: downgradeLevel,
+                domain: domain,
               ),
           createCompanionCallback:
               ({
@@ -3168,6 +3232,7 @@ class $$TasksTableTableManager
                 Value<DateTime?> firstScheduledDate = const Value.absent(),
                 Value<String?> currentPromptText = const Value.absent(),
                 Value<int> downgradeLevel = const Value.absent(),
+                Value<String?> domain = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
                 projectId: projectId,
@@ -3183,6 +3248,7 @@ class $$TasksTableTableManager
                 firstScheduledDate: firstScheduledDate,
                 currentPromptText: currentPromptText,
                 downgradeLevel: downgradeLevel,
+                domain: domain,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -41,4 +41,23 @@ void main() {
     expect(t!.currentPromptText, '只打开清单，写一句话');
     expect(t.downgradeLevel, 1);
   });
+
+  test('domain 列可写可读、默认 null', () async {
+    final id = await db.taskDao.insertTask(TasksCompanion.insert(
+      title: '研究 MCP 协议',
+      quadrant: Quadrant.importantUrgent,
+      source: TaskSource.capture,
+      domain: Value('学习'),
+    ));
+    final t = await db.taskDao.getById(id);
+    expect(t!.domain, '学习');
+
+    final id2 = await db.taskDao.insertTask(TasksCompanion.insert(
+      title: '没打标签的',
+      quadrant: Quadrant.importantUrgent,
+      source: TaskSource.capture,
+    ));
+    final t2 = await db.taskDao.getById(id2);
+    expect(t2!.domain, isNull);
+  });
 }
