@@ -6,7 +6,6 @@ import 'package:path/path.dart' as p;
 import '../domain/enums.dart';
 import 'daos/task_dao.dart';
 import 'daos/task_event_dao.dart';
-import 'daos/calendar_dao.dart';
 
 part 'database.g.dart';
 
@@ -64,7 +63,7 @@ class CalendarEvents extends Table {
 
 @DriftDatabase(
   tables: [Projects, Tasks, TaskEvents, Subscriptions, CalendarEvents],
-  daos: [TaskDao, TaskEventDao, CalendarDao],
+  daos: [TaskDao, TaskEventDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());

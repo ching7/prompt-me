@@ -2447,7 +2447,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
   late final TaskDao taskDao = TaskDao(this as AppDatabase);
   late final TaskEventDao taskEventDao = TaskEventDao(this as AppDatabase);
-  late final CalendarDao calendarDao = CalendarDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
