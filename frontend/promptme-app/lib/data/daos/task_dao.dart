@@ -10,6 +10,28 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
 
   Future<int> insertTask(TasksCompanion task) => into(tasks).insert(task);
 
+  /// 捕获一条：source=capture，scheduledDate=null 进收件箱、=今天进待办。
+  Future<int> insertCapture({
+    required String title,
+    String? domain,
+    DateTime? scheduledDate,
+  }) =>
+      into(tasks).insert(TasksCompanion.insert(
+        title: title,
+        quadrant: Quadrant.importantUrgent, // 占位，UI 不用
+        source: TaskSource.capture,
+        domain: Value(domain),
+        scheduledDate: Value(scheduledDate),
+      ));
+
+  /// 收件箱 = 无排期且待办，新→旧。
+  Stream<List<Task>> watchInbox() => (select(tasks)
+        ..where((t) =>
+            t.scheduledDate.isNull() &
+            t.status.equalsValue(TaskStatus.pending))
+        ..orderBy([(t) => OrderingTerm.desc(t.id)]))
+      .watch();
+
   Future<Task?> getById(int id) =>
       (select(tasks)..where((t) => t.id.equals(id))).getSingleOrNull();
 

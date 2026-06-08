@@ -42,6 +42,19 @@ void main() {
     expect(t.downgradeLevel, 1);
   });
 
+  test('insertCapture 进收件箱、watchInbox 只出无排期的待办（新→旧）', () async {
+    await db.taskDao.insertCapture(title: '第一条', domain: '学习');
+    await db.taskDao.insertCapture(title: '第二条');
+    // 一条直接给今天 → 不应出现在收件箱
+    await db.taskDao
+        .insertCapture(title: '今天就做', scheduledDate: d(8));
+
+    final inbox = await db.taskDao.watchInbox().first;
+    expect(inbox.map((t) => t.title), ['第二条', '第一条']); // id 倒序
+    expect(inbox.first.source, TaskSource.capture);
+    expect(inbox.last.domain, '学习');
+  });
+
   test('domain 列可写可读、默认 null', () async {
     final id = await db.taskDao.insertTask(TasksCompanion.insert(
       title: '研究 MCP 协议',
