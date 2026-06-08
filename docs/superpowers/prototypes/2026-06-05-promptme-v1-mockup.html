@@ -418,20 +418,12 @@ body::after{
 .micro .mlab{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-weight:800;font-size:10.5px;letter-spacing:.06em;color:var(--leaf);background:rgba(79,157,94,.14);padding:4px 10px;border-radius:999px;}
 .micro .mtitle{font-family:var(--zh);font-weight:600;font-size:17px;margin-top:11px;line-height:1.35;}
 .micro .mtitle b{color:var(--leaf);}
-.micro .mlevel{font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--ink-40);margin-top:9px;}
-.micro .mhint{display:flex;align-items:center;gap:6px;margin-top:13px;font-family:var(--sans);font-weight:600;font-size:10.5px;color:var(--ink-40);}
-.micro .mhint .l{color:var(--leaf)} .micro .mhint .r{color:var(--q3)}
-.micro .micro-link{display:inline-flex;align-items:center;gap:5px;margin-top:11px;font-family:var(--sans);font-weight:700;font-size:10.5px;color:var(--q3);background:rgba(62,124,119,.1);border:1px solid rgba(62,124,119,.26);border-radius:8px;padding:5px 9px;}
-.micro .micro-link b{color:var(--ink-60);font-weight:700;}
 .lock{margin-top:20px;border-radius:24px;padding:18px 16px 16px;color:#fff;position:relative;overflow:hidden;background:linear-gradient(165deg,#2a2f3a 0%,#1d2129 60%,#161a20 100%);box-shadow:0 20px 40px -18px rgba(0,0,0,.6);}
 .lock::after{content:"";position:absolute;inset:0;opacity:.5;background:radial-gradient(300px 120px at 80% -10%,rgba(79,157,94,.25),transparent 60%);}
-.lock .lh{position:relative;display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-weight:600;font-size:11px;color:rgba(255,255,255,.55);}
-.lock .ltime{position:relative;font-family:var(--display);font-weight:500;font-size:40px;text-align:center;margin:2px 0 16px;letter-spacing:.01em;}
-.lock .ltime small{font-family:var(--sans);font-weight:600;font-size:12px;display:block;color:rgba(255,255,255,.55);letter-spacing:.04em;}
+.lock .lh{position:relative;display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-weight:600;font-size:11px;color:rgba(255,255,255,.55);margin-bottom:14px;}
 .notif{position:relative;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);border-radius:18px;padding:12px 13px;}
 .notif .nh{display:flex;align-items:center;gap:7px;font-family:var(--sans);font-weight:700;font-size:11px;color:rgba(255,255,255,.7);}
 .notif .nh .ndot{width:15px;height:15px;border-radius:5px;background:var(--pop);display:flex;align-items:center;justify-content:center;font-size:9px;}
-.notif .nt{font-family:var(--zh);font-weight:600;font-size:14.5px;margin-top:8px;line-height:1.35;}
 .notif .nb{display:flex;gap:8px;margin-top:12px;}
 .nbtn{flex:1;text-align:center;font-family:var(--zh);font-weight:700;font-size:12.5px;padding:8px;border-radius:11px;}
 .nbtn.d{background:#fff;color:#1d2129;} .nbtn.h{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.16);}
@@ -959,30 +951,25 @@ body::after{
           <div class="sec-h" style="margin-top:6px"><span class="t">已为你变小</span><span class="ln"></span><span class="c">太累 · A</span></div>
           <div class="before">
             <div class="shrink-card">
-              <span class="q-tag" style="color:var(--q1);background:var(--q1-tint)"><span class="dot" style="background:var(--q1)"></span>原任务</span>
+              <span class="q-tag" style="color:var(--q1);background:var(--q1-tint)"><span class="dot" style="background:var(--q1)"></span>原任务 · 降级 1 次</span>
               <div class="tt">写 Java 代码</div>
             </div>
             <div class="arrow-down">↓</div>
             <div class="micro">
               <span class="mlab">⚡ 2 分钟微习惯</span>
-              <div class="mtitle">只<b>打开</b>编辑器，<br>写<b>一行注释</b>就行。</div>
-              <div class="mlevel">无底线降级 · 第 1 级　|　还嫌难？再右滑继续变小</div>
-              <div class="micro-link">🔗 来自原任务<b>「写 Java 代码」</b> · 已降级 1 次（复盘可追溯）</div>
-              <div class="mhint"><span class="l">← 左滑 我做到了</span> · <span class="r">右滑 还是难 →</span></div>
+              <div class="mtitle">只<b>打开</b>编辑器，写<b>一行注释</b>就行。</div>
             </div>
           </div>
           <div class="lock">
-            <div class="lh"><span>🔒 锁屏</span><span>周四 6月5日</span></div>
-            <div class="ltime">16:42<small>已刷新提示</small></div>
+            <div class="lh"><span>🔒 锁屏</span><span>16:42</span></div>
             <div class="notif">
-              <div class="nh"><span class="ndot">P</span> PROMPTME · 现在只要 2 分钟</div>
-              <div class="nt">只打开编辑器，写一行注释就行。</div>
+              <div class="nh"><span class="ndot">P</span> PromptMe · 现在只要 2 分钟</div>
               <div class="nb"><span class="nbtn d">✓ 做到了</span><span class="nbtn h">↓ 太难了</span></div>
             </div>
           </div>
         </div></div>
       </div></div>
-      <div class="caption"><div class="ct">无底线降级 → 锁屏</div><div class="cd"><span class="num">7</span>任务「缩」成 2 分钟微习惯，刷到锁屏常驻提示。<b style="color:#F4EDDF">微习惯关联原任务</b>（降级链 + 次数 + P/A/M 原因都记在原任务上，<b style="color:#F4EDDF">复盘可追溯</b>）。还嫌难？再右滑继续变小。</div></div>
+      <div class="caption"><div class="ct">无底线降级 → 锁屏</div><div class="cd"><span class="num">7</span>任务「缩」成 2 分钟微习惯 + 推到锁屏提示（P）。原任务标记<b style="color:#F4EDDF">降级次数</b>（复盘可追溯）。还嫌难？再右滑继续变小。</div></div>
     </div>
 
     <!-- ⑦ 庆祝 -->
