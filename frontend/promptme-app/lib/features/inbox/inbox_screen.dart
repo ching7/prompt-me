@@ -44,7 +44,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         onPressed: _openCapture,
         child: const Icon(Icons.add),
       ),
-      body: async.when(
+      body: SafeArea(
+        child: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('出错了：$e')),
         data: (all) {
@@ -79,7 +80,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             ],
           );
         },
-      ),
+      )),
     );
   }
 
