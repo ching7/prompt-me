@@ -29,7 +29,7 @@ enum Quadrant {
 
 enum TaskStatus { pending, done }
 
-enum TaskSource { manual, feishu }
+enum TaskSource { manual, feishu, capture }
 
 enum TaskEventType { done, tooHard }
 
