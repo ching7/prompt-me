@@ -1,9 +1,10 @@
 # PromptMe
 
-基于福格行为模型(B=MAP)的跨端行为管理工具。完整设计见 `docs/superpowers/specs/2026-06-03-promptme-v0-design.md`。
+基于福格行为模型(B=MAP)+ GTD 的行为管理工具——**把想法变成行动的引擎**。当前设计见 `docs/superpowers/specs/2026-06-05-promptme-v1-capture-gtd-pivot.md`（V1 转向稿；旧 v0 设计已废弃）。
 
-- **北极星**：用户「自己每天真用得上」；技术选型「只求快、最少运维」，不为展示堆栈。
-- **产品模型**：Mac 早晨在飞书(四象限任务)+苹果日历(时间块)规划；手机端只「提示+跟踪」，**绝不让用户重录**。
+- **北极星**：作者「自己每天真用得上」；技术选型「只求快、最少运维」，不为展示堆栈。
+- **产品模型(V1)**：链路 = **捕获 → 收件箱 → 加入今日 → 待办执行(福格闭环 + 番茄钟) → 复盘**。手机端 3 Tab(收件箱/待办/复盘)。桌面零摩擦捕获 + ntfy 同步是**阶段②**。
+- **V1 转向**：已砍掉 v0 的苹果日历订阅 / 飞书 md 导入 / 四象限；改以捕获+执行为核心。**绝不让用户重录**。
 
 ## 目录结构约定（后续代码仓遵循）
 
@@ -23,8 +24,21 @@ prompt-me/
     └── superpowers/        设计 / 原型 / 实现计划（已有：spec、prototype、plans）
 ```
 
-> **Flutter 工程根 = `frontend/promptme-app/`。** 第一波三套实现计划里所有 `lib/`、`test/`、`android/`、`pubspec.yaml` 路径及 `flutter`/`dart` 命令，都在该目录下执行（不是仓库根）。
+> **Flutter 工程根 = `frontend/promptme-app/`。** 所有 `lib/`、`test/`、`android/`、`pubspec.yaml` 路径及 `flutter`/`dart` 命令都在该目录下执行（不是仓库根）。
 
-## 当前状态
+`lib/features/` 已分 `inbox / todo / shell / settings`；`state/` 有 `inbox_controller`/`todo_controller`/`today_controller`/`providers`；数据层 `data/`（Drift,schema v3）。
 
-设计 spec、高保真原型、第一波三套 TDD 实现计划均已完成并提交（见 `docs/superpowers/`）。代码尚未开始；执行前需先装 Flutter SDK + 安卓工具链。
+## 当前状态（V1 阶段①，master）
+
+已实现 **1.1–1.6**（subagent 驱动 + 两段式审查，**62 个测试全绿**）：数据层地基 → 清理遗留+3-Tab 骨架 → 收件箱屏 → 待办屏(今日执行) → 福格闭环(我做到了/太难了滑动+庆祝+降级) → 番茄钟。各阶段 TDD 计划在 `docs/superpowers/plans/2026-06-0*-promptme-v1-phase1.*.md`。**待做**：1.7 积分 · MAP 诊断标签(AI) · 复盘(数据+AI)；阶段② 桌面捕获+ntfy。
+
+## ⚠️ 本机工具链坑（跑 flutter 必读）
+
+我的 Bash 是 bash、不读用户 `~/.zshrc`,所以每条 `flutter`/`dart` 命令都要显式带前缀:
+```
+export PATH="/Users/chenyanan/development/flutter/flutter/bin:$PATH" PUB_HOSTED_URL=https://pub.flutter-io.cn FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn no_proxy=127.0.0.1,localhost,::1,pub.flutter-io.cn,storage.flutter-io.cn NO_PROXY=127.0.0.1,localhost,::1,pub.flutter-io.cn,storage.flutter-io.cn
+```
+- **`no_proxy` 必须含 `127.0.0.1,localhost`** —— 否则 Claude 自带代理(`42.192.60.90:31546`)会拦截 `flutter_tester` 的 localhost 连接 → 测试全 `Connection reset`、崩。
+- **sqlite3 原生 `.so`** 从 GitHub 下载,国内直连超时;已下载缓存在 `.dart_tool`。**别 `flutter clean`**(会清缓存、又要联网下;真要下用用户 VPN `127.0.0.1:7897` 挂 `https_proxy`)。曾试 `source: system` 让安卓用系统库 → 运行态 `dlopen libsqlite3.so not found`,已回退,**安卓只能用默认下载模式**。
+- 改 Drift 表后跑 `dart run build_runner build --delete-conflicting-outputs`(带上面前缀)。
+- 测试归用户手动验收;我跑 build/analyze/test 仅自检,别声称「已为你验证」。
