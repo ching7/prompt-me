@@ -35,6 +35,9 @@ class TodoController {
       ref.read(todayControllerProvider).deleteTask(id);
   Future<void> tooHard(int id, FailureReason reason) =>
       ref.read(todayControllerProvider).tooHard(id, reason);
+
+  /// 完成一个番茄（+1 🍅）。
+  Future<void> completeTomato(int id) => _db.taskDao.incrementTomato(id);
 }
 
 final todoControllerProvider =

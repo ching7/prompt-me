@@ -93,4 +93,18 @@ void main() {
     final t2 = await db.taskDao.getById(id2);
     expect(t2!.domain, isNull);
   });
+
+  test('番茄列：incrementTomato 累加、setTomatoEst 设预估', () async {
+    final id = await db.taskDao.insertCapture(title: '写 Java 代码', domain: '工作');
+    var t = await db.taskDao.getById(id);
+    expect(t!.tomatoDone, 0);
+    expect(t.tomatoEst, isNull);
+
+    await db.taskDao.setTomatoEst(id, 3);
+    await db.taskDao.incrementTomato(id);
+    await db.taskDao.incrementTomato(id);
+    t = await db.taskDao.getById(id);
+    expect(t!.tomatoEst, 3);
+    expect(t.tomatoDone, 2);
+  });
 }

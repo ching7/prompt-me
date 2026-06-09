@@ -32,6 +32,8 @@ class Tasks extends Table {
   TextColumn get currentPromptText => text().nullable()();
   IntColumn get downgradeLevel => integer().withDefault(const Constant(0))();
   TextColumn get domain => text().nullable()();
+  IntColumn get tomatoEst => integer().nullable()();
+  IntColumn get tomatoDone => integer().withDefault(const Constant(0))();
 }
 
 class TaskEvents extends Table {
@@ -69,7 +71,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +79,10 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(tasks, tasks.domain);
+          }
+          if (from < 3) {
+            await m.addColumn(tasks, tasks.tomatoEst);
+            await m.addColumn(tasks, tasks.tomatoDone);
           }
         },
       );
