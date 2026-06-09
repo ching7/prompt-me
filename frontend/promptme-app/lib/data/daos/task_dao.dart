@@ -93,6 +93,18 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
       (update(tasks)..where((t) => t.id.equals(id)))
           .write(TasksCompanion(domain: Value(domain)));
 
+  /// 完成一个番茄：tomatoDone += 1。
+  Future<void> incrementTomato(int id) async {
+    final t = await getById(id);
+    await (update(tasks)..where((x) => x.id.equals(id)))
+        .write(TasksCompanion(tomatoDone: Value((t?.tomatoDone ?? 0) + 1)));
+  }
+
+  /// 设番茄预估数。
+  Future<void> setTomatoEst(int id, int est) =>
+      (update(tasks)..where((x) => x.id.equals(id)))
+          .write(TasksCompanion(tomatoEst: Value(est)));
+
   /// 所有已完成任务的「完成日期」集合（用于连续天数）。
   Future<Set<DateTime>> completionDays() async {
     final rows =

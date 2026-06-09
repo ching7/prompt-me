@@ -9,7 +9,10 @@ class TodoCard extends StatelessWidget {
     required this.done,
     required this.overdue,
     required this.rolloverCount,
+    required this.tomatoDone,
+    required this.tomatoEst,
     required this.onToggle,
+    required this.onFocus,
   });
 
   final String title;
@@ -17,7 +20,10 @@ class TodoCard extends StatelessWidget {
   final bool done;
   final bool overdue;
   final int rolloverCount;
+  final int tomatoDone;
+  final int? tomatoEst;
   final VoidCallback onToggle;
+  final VoidCallback onFocus;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +104,28 @@ class TodoCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (!done) ...[
+                      const SizedBox(width: 8),
+                      InkWell(
+                        key: const ValueKey('todo-focus'),
+                        onTap: onFocus,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.q1Tint,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                              '🍅 $tomatoDone${tomatoEst != null ? '/$tomatoEst' : ''}',
+                              style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.q1)),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

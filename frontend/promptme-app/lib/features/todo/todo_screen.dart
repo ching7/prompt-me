@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../inbox/capture_sheet.dart';
 import '../today/widgets/celebration_overlay.dart';
 import 'stats_chip.dart';
+import 'focus_screen.dart';
 import 'todo_card.dart';
 import 'too_hard_sheet.dart';
 
@@ -98,7 +99,7 @@ class TodoScreen extends ConsumerWidget {
                 if (view.done.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _sectionHeader('已完成', '${view.done.length}'),
-                  for (final t in view.done) _card(ctl, t, true),
+                  for (final t in view.done) _card(context, ctl, t, true),
                 ],
               ],
             );
@@ -108,15 +109,22 @@ class TodoScreen extends ConsumerWidget {
     );
   }
 
-  Widget _card(TodoController ctl, Task t, bool done) => TodoCard(
-        title:
-            (t.currentPromptText?.isNotEmpty ?? false) ? t.currentPromptText! : t.title,
-        domain: t.domain,
-        done: done,
-        overdue: !done && t.rolloverCount > 0,
-        rolloverCount: t.rolloverCount,
-        onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
-      );
+  Widget _card(BuildContext context, TodoController ctl, Task t, bool done) {
+    final title =
+        (t.currentPromptText?.isNotEmpty ?? false) ? t.currentPromptText! : t.title;
+    return TodoCard(
+      title: title,
+      domain: t.domain,
+      done: done,
+      overdue: !done && t.rolloverCount > 0,
+      rolloverCount: t.rolloverCount,
+      tomatoDone: t.tomatoDone,
+      tomatoEst: t.tomatoEst,
+      onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
+      onFocus: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => FocusScreen(taskId: t.id, taskTitle: title))),
+    );
+  }
 
   Widget _pendingTile(
       BuildContext context, TodoController ctl, Task t, int streak) {
@@ -150,7 +158,7 @@ class TodoScreen extends ConsumerWidget {
           return false; // 不移除：降级后卡片经 stream 变微习惯
         }
       },
-      child: _card(ctl, t, false),
+      child: _card(context, ctl, t, false),
     );
   }
 

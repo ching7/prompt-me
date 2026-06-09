@@ -13,7 +13,10 @@ void main() {
           done: false,
           overdue: false,
           rolloverCount: 0,
+          tomatoDone: 0,
+          tomatoEst: null,
           onToggle: () => toggled = true,
+          onFocus: () {},
         ),
       ),
     ));
@@ -32,10 +35,36 @@ void main() {
           done: false,
           overdue: true,
           rolloverCount: 2,
+          tomatoDone: 0,
+          tomatoEst: null,
           onToggle: () {},
+          onFocus: () {},
         ),
       ),
     ));
     expect(find.textContaining('已推迟 2 次'), findsOneWidget);
+  });
+
+  testWidgets('显示 🍅 数 + 点击发起 onFocus', (tester) async {
+    var focused = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: TodoCard(
+          title: '写 Java 代码',
+          domain: '工作',
+          done: false,
+          overdue: false,
+          rolloverCount: 0,
+          tomatoDone: 1,
+          tomatoEst: 3,
+          onToggle: () {},
+          onFocus: () => focused = true,
+        ),
+      ),
+    ));
+    expect(find.textContaining('🍅'), findsOneWidget);
+    expect(find.textContaining('1/3'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('todo-focus')));
+    expect(focused, true);
   });
 }
