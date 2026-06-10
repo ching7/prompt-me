@@ -12,6 +12,7 @@ class ScoreCalculator {
         TaskEventType.done => donePoints,
         TaskEventType.tomato => tomatoPoints,
         TaskEventType.tooHard => 0,
+        TaskEventType.tomatoAbort => 0, // 放弃番茄不加分
       };
 
   static int total(Iterable<TaskEventType> types) =>

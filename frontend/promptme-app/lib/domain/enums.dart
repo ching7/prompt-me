@@ -31,8 +31,8 @@ enum TaskStatus { pending, done }
 
 enum TaskSource { manual, feishu, capture }
 
-// 末尾追加 capture/tomato；intEnum 存 index，done=0/tooHard=1 不可动（兼容旧数据）。
-enum TaskEventType { done, tooHard, capture, tomato }
+// 末尾追加；intEnum 存 index，done=0/tooHard=1/capture=2/tomato=3 不可动（兼容旧数据）。
+enum TaskEventType { done, tooHard, capture, tomato, tomatoAbort }
 
 enum FailureReason {
   forgot,

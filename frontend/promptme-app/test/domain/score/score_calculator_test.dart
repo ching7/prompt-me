@@ -17,4 +17,12 @@ void main() {
   test('空事件 = 0 分', () {
     expect(ScoreCalculator.total(const []), 0);
   });
+
+  test('放弃番茄(tomatoAbort) 不加分', () {
+    expect(ScoreCalculator.pointsFor(TaskEventType.tomatoAbort), 0);
+    expect(
+        ScoreCalculator.total(
+            [TaskEventType.tomato, TaskEventType.tomatoAbort]),
+        ScoreCalculator.tomatoPoints);
+  });
 }

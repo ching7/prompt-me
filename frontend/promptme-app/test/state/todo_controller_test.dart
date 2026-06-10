@@ -51,4 +51,18 @@ void main() {
     expect(done.length, 1);
     expect(pending.length + done.length, 1);
   });
+
+  test('abortTomato 记 tomatoAbort 事件、不增 tomatoDone', () async {
+    final id = await db.taskDao.insertCapture(title: '写周报');
+    await ctl().abortTomato(id);
+    final events = await db.taskEventDao.forTask(id);
+    expect(events.where((e) => e.type == TaskEventType.tomatoAbort).length, 1);
+    expect((await db.taskDao.getById(id))!.tomatoDone, 0);
+  });
+
+  test('setTomatoEst 写预估', () async {
+    final id = await db.taskDao.insertCapture(title: '写周报');
+    await ctl().setTomatoEst(id, 3);
+    expect((await db.taskDao.getById(id))!.tomatoEst, 3);
+  });
 }
