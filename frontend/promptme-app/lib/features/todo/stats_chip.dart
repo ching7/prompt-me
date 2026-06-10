@@ -3,10 +3,15 @@ import '../../theme/app_colors.dart';
 
 class StatsChip extends StatelessWidget {
   const StatsChip(
-      {super.key, required this.streak, required this.done, required this.total});
+      {super.key,
+      required this.streak,
+      required this.done,
+      required this.total,
+      required this.points});
   final int streak;
   final int done;
   final int total;
+  final int points;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +31,12 @@ class StatsChip extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
                 color: AppColors.q3)),
+        _sep(),
+        Text('★$points',
+            style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: AppColors.pop)),
       ]),
     );
   }

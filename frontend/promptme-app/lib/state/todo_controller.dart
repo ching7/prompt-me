@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/enums.dart';
 import '../domain/fogg/streak_calculator.dart';
+import '../domain/score/score_calculator.dart';
 import 'providers.dart';
 import 'today_controller.dart';
 
@@ -44,6 +45,12 @@ class TodoController {
   Future<int> currentStreak() async {
     final days = await _db.taskDao.completionDays();
     return StreakCalculator.currentStreak(days, ref.read(selectedDateProvider));
+  }
+
+  /// 即时读总积分（庆祝「+N 分」后显示总分用，避免读旧值）。
+  Future<int> currentPoints() async {
+    final events = await _db.taskEventDao.all();
+    return ScoreCalculator.total(events.map((e) => e.type));
   }
 }
 

@@ -61,6 +61,7 @@ class TodoScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(todoTodayProvider);
     final streak = ref.watch(streakProvider).value ?? 0;
+    final points = ref.watch(pointsProvider).value ?? 0;
     final ctl = ref.read(todoControllerProvider);
 
     return Scaffold(
@@ -87,7 +88,8 @@ class TodoScreen extends ConsumerWidget {
                     StatsChip(
                         streak: streak,
                         done: view.doneCount,
-                        total: view.totalCount),
+                        total: view.totalCount,
+                        points: points),
                   ],
                 ),
                 const SizedBox(height: 14),
