@@ -2,16 +2,23 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:promptme/data/database.dart';
 import 'package:promptme/features/shell/home_shell.dart';
+import 'package:promptme/state/integration_providers.dart';
 import 'package:promptme/state/providers.dart';
 
 void main() {
   testWidgets('app boots to HomeShell with three tabs', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
 
     await tester.pumpWidget(ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        sharedPrefsProvider.overrideWithValue(prefs),
+      ],
       child: const MaterialApp(home: HomeShell()),
     ));
     await tester.pumpAndSettle();
