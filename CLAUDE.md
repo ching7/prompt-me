@@ -30,7 +30,13 @@ prompt-me/
 
 ## 当前状态（V1 阶段①，master）
 
-已实现 **1.1–1.7**（subagent 驱动 + 两段式审查，**68 个测试全绿**）：数据层地基 → 清理遗留+3-Tab 骨架 → 收件箱屏 → 待办屏(今日执行) → 福格闭环(我做到了/太难了滑动+庆祝+降级) → 番茄钟 → **正反馈积分**(捕获+2/完成+10/番茄+10，**事件派生总积分**=`TaskEventType` 加 `capture`/`tomato` + `ScoreCalculator` 求和，无可变计数器；`StatsChip ★总积分` 响应式 + 庆祝层 `+N 分`)。另含 **web 适配**(Drift WASM，`lib/data/connection/` 按平台条件导入，`web/` 资源随仓库；作者改用 Chrome 网页自测)。各阶段 TDD 计划在 `docs/superpowers/plans/2026-06-0*-promptme-v1-phase1.*.md`。**待做**：MAP 诊断标签(AI) · 复盘(数据+AI)；阶段② 桌面捕获+ntfy。
+已实现 **1.1–1.7 + AI/MAP/复盘**（subagent 驱动 + 两段式审查，**83 个测试全绿**）：数据层地基 → 清理遗留+3-Tab 骨架 → 收件箱屏 → 待办屏 → 福格闭环 → 番茄钟 → **正反馈积分**(捕获+2/完成+10/番茄+10，**事件派生**=`TaskEventType` 加 `capture`/`tomato` + `ScoreCalculator`；`StatsChip ★总积分` + 庆祝 `+N 分`)。其后:
+- **AI 总开关**:`AiConfig.enabled/isActive`(默认关)+ 设置屏「启用 AI」开关;所有 AI 调用点门控 `isActive`,关掉=本地兜底。**设置屏入口=顶栏右上齿轮**(`HomeShell` AppBar)。
+- **MAP 降级**:`Downgrade.buildPrompt` 与 `localFallback` 都按塌掉要素(M/A/P)对症(能力塌→砍小、动机塌→不靠动力+即时好处、提示塌→绑锚点);`FailureReason.foggFactorName`;降级路径打 `[AI]` 日志。
+- **MAP 诊断标签**:`MapDiagnosis`(tooHard.reason 计数取唯一最高，≥2 才给)+ `taskDiagnosisProvider`(family);待办卡显 `🩺 总卡在『…』`。
+- **复盘屏**(替换占位):`reviewStatsProvider`(今日完成/番茄/太难了 + 累计连续/积分/MAP 主因，纯派生)+ **AI 复盘洞察**(按钮触发 `ReviewController.generate`→复用 `AiClient.review`/`ReviewResultView`，门控 `isActive`)。
+
+另含 **web 适配**(Drift WASM，`lib/data/connection/` 条件导入，`web/` 资源随仓库；作者用 Chrome 网页自测)。TDD 计划在 `docs/superpowers/plans/2026-06-*.md`。**待做**：复盘日历切换/历史某天 · 积分番茄曲线 · AI 结果缓存 · prioritize 接屏 · 番茄预估入口；**阶段②** 桌面零摩擦捕获 + ntfy 单向同步。
 
 ## ⚠️ 本机工具链坑（跑 flutter 必读）
 
