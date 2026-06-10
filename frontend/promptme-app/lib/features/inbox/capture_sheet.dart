@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/domains.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 
 /// 手记表单（取自原型 Flow 01「捕获 · 想到就走」）：
 /// 提示语 + 墨框输入 + 领域标签（默认选中第一个、必选）→ onCapture(text, domain)。
@@ -36,11 +37,7 @@ class _CaptureSheetState extends State<CaptureSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('记一笔',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink)),
+          Text('记一笔', style: AppText.title(22, weight: FontWeight.w700)),
           const SizedBox(height: 4),
           const Text('想到什么先记下来 · 之后再整理，别打断手头的活',
               style: TextStyle(fontSize: 12.5, color: AppColors.ink60)),

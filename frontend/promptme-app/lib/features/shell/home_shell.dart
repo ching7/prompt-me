@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 import '../inbox/inbox_screen.dart';
 import '../review/review_screen.dart';
 import '../settings/settings_screen.dart';
@@ -29,9 +30,7 @@ class _HomeShellState extends State<HomeShell> {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 48,
-        title: Text(_titles[_index],
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w800)),
+        title: Text(_titles[_index], style: AppText.title(22)),
         actions: [
           IconButton(
             key: const ValueKey('open-settings'),
