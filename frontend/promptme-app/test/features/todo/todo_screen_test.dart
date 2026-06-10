@@ -2,8 +2,10 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:promptme/data/database.dart';
 import 'package:promptme/features/todo/todo_screen.dart';
+import 'package:promptme/state/integration_providers.dart';
 import 'package:promptme/state/providers.dart';
 import 'package:promptme/state/todo_controller.dart';
 
@@ -96,5 +98,29 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     // 任务已进「已完成」
     expect(find.textContaining('已完成'), findsOneWidget);
+  });
+
+  testWidgets('AI 关闭时「AI 整理今日」→ 弹层显引导', (tester) async {
+    SharedPreferences.setMockInitialValues({}); // AI 默认关
+    final prefs = await SharedPreferences.getInstance();
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final c = ProviderContainer(overrides: [
+      databaseProvider.overrideWithValue(db),
+      sharedPrefsProvider.overrideWithValue(prefs),
+    ]);
+    addTearDown(c.dispose);
+    await c.read(todoControllerProvider).addToday(text: 'A');
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: const MaterialApp(home: TodoScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('ai-prioritize')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.textContaining('开启 AI'), findsOneWidget);
   });
 }
