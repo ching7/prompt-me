@@ -117,6 +117,12 @@ flutter run                                                 # 跑到设备上
 > - **`flutter test` 必须排除 localhost 代理**，否则 `flutter_tester` 连本地端口被代理拦截、测试全崩：
 >   `export no_proxy=127.0.0.1,localhost,::1 NO_PROXY=127.0.0.1,localhost,::1`
 > - **sqlite3 原生库**默认从 GitHub 下载预编译 `.so`，国内常超时。首次安卓构建挂 VPN 代理下载一次即缓存（`export https_proxy=http://127.0.0.1:7897`，端口按你的代理）；之后无需代理。**别随意 `flutter clean`**（会清掉缓存的 `.so`）。
+> - **Web 端（`flutter run -d chrome`）** 用 Drift WASM，需 `web/sqlite3.wasm` + `web/drift_worker.js` 两个资源（**已随仓库提交，clone 即用**）。仅当升级 drift/sqlite3 版本时才需重下（版本须与 `pubspec.lock` 对齐：sqlite3 `3.3.2`、drift `2.33.0`）：
+>   ```bash
+>   curl -L -o web/sqlite3.wasm   https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.3.2/sqlite3.wasm
+>   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.33.0/drift_worker.js
+>   ```
+>   数据库连接已按平台拆分（`lib/data/connection/`：`native.dart` 走 ffi，`web.dart` 走 WASM，`connection.dart` 条件导入），**Web 不会再把 `dart:ffi` 编进包**。
 > - Gradle 阿里云/腾讯镜像已写进 `android/`。
 
 ## 🗺️ 路线图

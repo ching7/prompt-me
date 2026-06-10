@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import '../domain/enums.dart';
+import 'connection/connection.dart';
 import 'daos/task_dao.dart';
 import 'daos/task_event_dao.dart';
 
@@ -68,7 +65,7 @@ class CalendarEvents extends Table {
   daos: [TaskDao, TaskEventDao],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
   int get schemaVersion => 3;
@@ -87,10 +84,4 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  static QueryExecutor _open() {
-    return LazyDatabase(() async {
-      final dir = await getApplicationDocumentsDirectory();
-      return NativeDatabase(File(p.join(dir.path, 'promptme.sqlite')));
-    });
-  }
 }
