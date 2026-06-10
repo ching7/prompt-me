@@ -107,4 +107,14 @@ void main() {
     expect(t!.tomatoEst, 3);
     expect(t.tomatoDone, 2);
   });
+
+  test('捕获落 capture 事件、番茄落 tomato 事件', () async {
+    final id = await db.taskDao.insertCapture(title: '写 Java 代码', domain: '工作');
+    await db.taskDao.incrementTomato(id);
+
+    final events = await db.taskEventDao.all();
+    final types = events.map((e) => e.type).toList();
+    expect(types, contains(TaskEventType.capture));
+    expect(types, contains(TaskEventType.tomato));
+  });
 }

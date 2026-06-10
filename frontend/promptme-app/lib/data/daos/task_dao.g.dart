@@ -6,6 +6,7 @@ part of 'task_dao.dart';
 mixin _$TaskDaoMixin on DatabaseAccessor<AppDatabase> {
   $ProjectsTable get projects => attachedDatabase.projects;
   $TasksTable get tasks => attachedDatabase.tasks;
+  $TaskEventsTable get taskEvents => attachedDatabase.taskEvents;
   TaskDaoManager get managers => TaskDaoManager(this);
 }
 
@@ -16,4 +17,6 @@ class TaskDaoManager {
       $$ProjectsTableTableManager(_db.attachedDatabase, _db.projects);
   $$TasksTableTableManager get tasks =>
       $$TasksTableTableManager(_db.attachedDatabase, _db.tasks);
+  $$TaskEventsTableTableManager get taskEvents =>
+      $$TaskEventsTableTableManager(_db.attachedDatabase, _db.taskEvents);
 }
