@@ -33,9 +33,11 @@ void main() {
     expect(find.text('累计'), findsOneWidget);
     expect(find.textContaining('MAP'), findsOneWidget);
     expect(find.text('1'), findsWidgets); // 今日完成 = 1
-    // AI 关闭 → 显引导，不显生成按钮
+
+    // 点「AI 复盘」(关 AI) → 内联显引导
+    await tester.tap(find.byKey(const ValueKey('review-ai')));
+    await tester.pump();
     expect(find.textContaining('开启 AI'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, '生成 AI 复盘'), findsNothing);
 
     await db.close();
     await tester.pump();

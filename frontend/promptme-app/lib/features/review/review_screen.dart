@@ -6,6 +6,7 @@ import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/review_controller.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/ai_button.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({super.key});
@@ -14,15 +15,20 @@ class ReviewScreen extends ConsumerStatefulWidget {
 }
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
+  bool _aiOpen = false;
   bool _loading = false;
   List<ReviewItem>? _items;
   String? _error;
 
-  Future<void> _generate() async {
+  /// 点「AI 复盘」：内联展开（与待办「AI 整理」同逻辑）。关 AI → 引导。
+  Future<void> _onAiTap(bool active) async {
     setState(() {
-      _loading = true;
+      _aiOpen = true;
       _error = null;
+      _items = null;
+      _loading = active;
     });
+    if (!active) return;
     try {
       final items = await ref.read(reviewControllerProvider).generate();
       if (mounted) {
@@ -54,67 +60,66 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
           children: [
-            _sectionHeader('今日小结'),
+            // 今日小结 + 右侧「AI 复盘」按钮（与待办「日期 + AI 整理」同位置/同样式）
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, top: 4),
+              child: Row(
+                children: [
+                  const Text('今日小结',
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                          color: AppColors.ink)),
+                  const Spacer(),
+                  AiButton(
+                    key: const ValueKey('review-ai'),
+                    label: 'AI 复盘',
+                    loading: _loading,
+                    onPressed: () => _onAiTap(aiActive),
+                  ),
+                ],
+              ),
+            ),
             _todayCard(stats),
+            if (_aiOpen) ...[
+              const SizedBox(height: 12),
+              _aiPanel(aiActive),
+            ],
             const SizedBox(height: 18),
             _sectionHeader('累计'),
             _backgroundCard(streak, points, stats),
-            const SizedBox(height: 18),
-            _sectionHeader('AI 复盘'),
-            _aiSection(aiActive),
           ],
         ),
       ),
     );
   }
 
-  Widget _aiSection(bool aiActive) {
-    if (!aiActive) {
-      return _card(
+  /// 内联 AI 复盘面板（引导 / loading / 结果），紧贴今日小结下方。
+  Widget _aiPanel(bool aiActive) => _card(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('开启 AI 后可生成个性化复盘建议',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 6),
-            Text('去右上角「设置」打开「启用 AI」并填 key',
-                style: TextStyle(fontSize: 12.5, color: AppColors.ink40)),
-          ],
-        ),
-      );
-    }
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          FilledButton.icon(
-            onPressed: _loading ? null : _generate,
-            icon: const Icon(Icons.auto_awesome, size: 18),
-            label: Text(_items == null ? '生成 AI 复盘' : '重新生成'),
-          ),
-          if (_loading) ...[
-            const SizedBox(height: 12),
-            Row(children: const [
-              SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2)),
-              SizedBox(width: 10),
-              Text('正在复盘…',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.ink60)),
-            ]),
-          ],
-          if (_error != null) ...[
-            const SizedBox(height: 10),
-            Text('生成失败：$_error',
-                style: const TextStyle(fontSize: 12.5, color: AppColors.q1)),
-          ],
-          if (_items != null && !_loading) ...[
-            const SizedBox(height: 12),
-            if (_items!.isEmpty)
+          children: [
+            if (!aiActive)
+              const Text('开启 AI 后可生成个性化复盘建议 · 去右上「设置」打开「启用 AI」并填 key',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.ink40))
+            else if (_loading)
+              Row(children: const [
+                SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(width: 10),
+                Text('正在复盘…',
+                    style: TextStyle(fontSize: 12.5, color: AppColors.ink60)),
+              ])
+            else if (_error != null)
+              Text('生成失败：$_error',
+                  style: const TextStyle(fontSize: 12.5, color: AppColors.q1))
+            else if (_items != null && _items!.isEmpty)
               const Text('暂无挣扎中的任务，或数据还不够。',
                   style: TextStyle(fontSize: 12.5, color: AppColors.ink40))
-            else
+            else if (_items != null)
               ..._items!.map((i) => Padding(
                     padding: const EdgeInsets.only(bottom: 9),
                     child: Column(
@@ -131,10 +136,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ),
                   )),
           ],
-        ],
-      ),
-    );
-  }
+        ),
+      );
 
   Widget _todayCard(ReviewStats? s) => _card(
         child: Row(

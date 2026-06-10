@@ -5,6 +5,7 @@ import '../../domain/domains.dart';
 import '../../domain/enums.dart';
 import '../../theme/app_colors.dart';
 import '../../state/inbox_controller.dart';
+import '../../state/providers.dart';
 import 'capture_sheet.dart';
 import 'inbox_card.dart';
 
@@ -39,6 +40,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(inboxProvider);
+    final points = ref.watch(pointsProvider).value ?? 0;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _openCapture,
@@ -66,6 +68,22 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                       Text('${all.length} 条待整理',
                           style:
                               TextStyle(color: AppColors.ink40, fontSize: 12)),
+                      const Spacer(),
+                      // ★ 总积分：捕获 +2 即时可见
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: AppColors.card,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: AppColors.ink20),
+                        ),
+                        child: Text('★$points',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                                color: AppColors.pop)),
+                      ),
                     ]),
                     const SizedBox(height: 12),
                     _filterBar(),

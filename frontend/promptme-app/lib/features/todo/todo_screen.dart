@@ -8,6 +8,7 @@ import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/ai_button.dart';
 import '../inbox/capture_sheet.dart';
 import '../today/widgets/celebration_overlay.dart';
 import 'stats_chip.dart';
@@ -173,16 +174,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     );
   }
 
-  Widget _aiButton() => OutlinedButton.icon(
+  Widget _aiButton() => AiButton(
         key: const ValueKey('ai-prioritize'),
+        label: 'AI 整理',
+        loading: _aiOpen && _aiLoading,
         onPressed: _runPrioritize,
-        icon: const Icon(Icons.auto_awesome, size: 15),
-        label: const Text('AI 整理', style: TextStyle(fontSize: 12.5)),
-        style: OutlinedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          foregroundColor: AppColors.ink60,
-        ),
       );
 
   /// 内联 AI 整理面板（loading / 引导 / 结果），列表顶部。
