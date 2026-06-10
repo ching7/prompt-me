@@ -31,22 +31,11 @@ class _CaptureSheetState extends State<CaptureSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 10, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: AppColors.ink20,
-                  borderRadius: BorderRadius.circular(999)),
-            ),
-          ),
-          const SizedBox(height: 16),
           const Text('记一笔',
               style: TextStyle(
                   fontSize: 18,
