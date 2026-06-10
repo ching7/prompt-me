@@ -99,7 +99,8 @@ class TodoScreen extends ConsumerWidget {
                 if (view.pending.isEmpty)
                   _empty('今天还没排任务 · 按 + 加一件')
                 else
-                  for (final t in view.pending) _pendingTile(context, ctl, t),
+                  for (final t in view.pending)
+                    _pendingTile(context, ref, ctl, t),
                 if (view.done.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _sectionHeader('已完成', '${view.done.length}'),
@@ -113,7 +114,8 @@ class TodoScreen extends ConsumerWidget {
     );
   }
 
-  Widget _card(BuildContext context, TodoController ctl, Task t, bool done) {
+  Widget _card(BuildContext context, TodoController ctl, Task t, bool done,
+      {String? diagnosisLabel}) {
     final title =
         (t.currentPromptText?.isNotEmpty ?? false) ? t.currentPromptText! : t.title;
     return TodoCard(
@@ -124,6 +126,7 @@ class TodoScreen extends ConsumerWidget {
       rolloverCount: t.rolloverCount,
       downgradeLevel: t.downgradeLevel,
       originTitle: t.title,
+      diagnosisLabel: diagnosisLabel,
       tomatoDone: t.tomatoDone,
       tomatoEst: t.tomatoEst,
       onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
@@ -132,10 +135,12 @@ class TodoScreen extends ConsumerWidget {
     );
   }
 
-  Widget _pendingTile(BuildContext context, TodoController ctl, Task t) {
+  Widget _pendingTile(
+      BuildContext context, WidgetRef ref, TodoController ctl, Task t) {
     final title = (t.currentPromptText?.isNotEmpty ?? false)
         ? t.currentPromptText!
         : t.title;
+    final diagnosisLabel = ref.watch(taskDiagnosisProvider(t.id)).value?.label;
     return Dismissible(
       key: ValueKey('todo-${t.id}'),
       background: Container(
@@ -166,7 +171,7 @@ class TodoScreen extends ConsumerWidget {
           return false; // 不移除：降级后卡片经 stream 变微习惯
         }
       },
-      child: _card(context, ctl, t, false),
+      child: _card(context, ctl, t, false, diagnosisLabel: diagnosisLabel),
     );
   }
 

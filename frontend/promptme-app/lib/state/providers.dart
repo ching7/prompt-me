@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
+import '../domain/enums.dart';
+import '../domain/fogg/map_diagnosis.dart';
 import '../domain/fogg/streak_calculator.dart';
 import '../domain/score/score_calculator.dart';
 
@@ -30,4 +32,14 @@ final pointsProvider = StreamProvider<int>((ref) {
   return db.taskEventDao
       .watchAll()
       .map((events) => ScoreCalculator.total(events.map((e) => e.type)));
+});
+
+// 任务级 MAP 诊断：累积该任务历次「太难了」的失败要素 → 主因（纯派生）。
+final taskDiagnosisProvider =
+    StreamProvider.family<MapDiagnosis, int>((ref, taskId) {
+  final db = ref.watch(databaseProvider);
+  return db.taskEventDao.watchForTask(taskId).map((events) => MapDiagnosis.from(
+      events
+          .where((e) => e.type == TaskEventType.tooHard && e.reason != null)
+          .map((e) => e.reason!)));
 });

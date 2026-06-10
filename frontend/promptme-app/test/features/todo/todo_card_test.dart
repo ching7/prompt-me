@@ -67,4 +67,30 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('todo-focus')));
     expect(focused, true);
   });
+
+  testWidgets('传 diagnosisLabel → 显诊断；不传 → 无', (tester) async {
+    Widget card({String? diag}) => MaterialApp(
+          home: Scaffold(
+            body: TodoCard(
+              title: '写 Java 代码',
+              domain: '工作',
+              done: false,
+              overdue: false,
+              rolloverCount: 0,
+              diagnosisLabel: diag,
+              tomatoDone: 0,
+              tomatoEst: null,
+              onToggle: () {},
+              onFocus: () {},
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(card(diag: '总卡在「能力·A」'));
+    expect(find.textContaining('🩺'), findsOneWidget);
+    expect(find.textContaining('总卡在「能力·A」'), findsOneWidget);
+
+    await tester.pumpWidget(card());
+    expect(find.textContaining('🩺'), findsNothing);
+  });
 }

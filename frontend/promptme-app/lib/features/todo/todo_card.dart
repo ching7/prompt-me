@@ -11,6 +11,7 @@ class TodoCard extends StatelessWidget {
     required this.rolloverCount,
     this.downgradeLevel = 0,
     this.originTitle,
+    this.diagnosisLabel,
     required this.tomatoDone,
     required this.tomatoEst,
     required this.onToggle,
@@ -24,6 +25,9 @@ class TodoCard extends StatelessWidget {
   final int rolloverCount;
   final int downgradeLevel;
   final String? originTitle;
+
+  /// MAP 诊断：「总卡在『…』」；无清晰模式时为 null。
+  final String? diagnosisLabel;
   final int tomatoDone;
   final int? tomatoEst;
   final VoidCallback onToggle;
@@ -93,6 +97,16 @@ class TodoCard extends StatelessWidget {
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.leaf)),
                             ),
+                            const SizedBox(height: 5),
+                          ],
+                          if (!done && diagnosisLabel != null) ...[
+                            Row(children: [
+                              Text('🩺 $diagnosisLabel',
+                                  style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.q1)),
+                            ]),
                             const SizedBox(height: 5),
                           ],
                           Text(title,
