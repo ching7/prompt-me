@@ -9,6 +9,7 @@ import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/ai_button.dart';
+import '../../widgets/app_fab.dart';
 import '../inbox/capture_sheet.dart';
 import '../today/widgets/celebration_overlay.dart';
 import 'stats_chip.dart';
@@ -116,10 +117,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     final ctl = ref.read(todoControllerProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAdd,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: AppFab(onPressed: _openAdd),
       body: SafeArea(
         child: async.when(
           loading: () => const Center(child: CircularProgressIndicator()),
