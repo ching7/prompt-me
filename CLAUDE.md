@@ -30,7 +30,7 @@ prompt-me/
 
 ## 当前状态（V1 阶段①，master）
 
-已实现 **1.1–1.6**（subagent 驱动 + 两段式审查，**62 个测试全绿**）：数据层地基 → 清理遗留+3-Tab 骨架 → 收件箱屏 → 待办屏(今日执行) → 福格闭环(我做到了/太难了滑动+庆祝+降级) → 番茄钟。各阶段 TDD 计划在 `docs/superpowers/plans/2026-06-0*-promptme-v1-phase1.*.md`。**待做**：1.7 积分 · MAP 诊断标签(AI) · 复盘(数据+AI)；阶段② 桌面捕获+ntfy。
+已实现 **1.1–1.7**（subagent 驱动 + 两段式审查，**68 个测试全绿**）：数据层地基 → 清理遗留+3-Tab 骨架 → 收件箱屏 → 待办屏(今日执行) → 福格闭环(我做到了/太难了滑动+庆祝+降级) → 番茄钟 → **正反馈积分**(捕获+2/完成+10/番茄+10，**事件派生总积分**=`TaskEventType` 加 `capture`/`tomato` + `ScoreCalculator` 求和，无可变计数器；`StatsChip ★总积分` 响应式 + 庆祝层 `+N 分`)。另含 **web 适配**(Drift WASM，`lib/data/connection/` 按平台条件导入，`web/` 资源随仓库；作者改用 Chrome 网页自测)。各阶段 TDD 计划在 `docs/superpowers/plans/2026-06-0*-promptme-v1-phase1.*.md`。**待做**：MAP 诊断标签(AI) · 复盘(数据+AI)；阶段② 桌面捕获+ntfy。
 
 ## ⚠️ 本机工具链坑（跑 flutter 必读）
 
