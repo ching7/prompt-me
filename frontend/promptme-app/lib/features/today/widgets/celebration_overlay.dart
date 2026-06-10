@@ -38,63 +38,66 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.paper.withValues(alpha: 0.98),
+    return Dialog(
+      backgroundColor: AppColors.paper,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 44, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Stack(
-        alignment: Alignment.center,
+        alignment: Alignment.topCenter,
         children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confetti,
-              blastDirectionality: BlastDirectionality.explosive,
-              numberOfParticles: 22,
-              maxBlastForce: 18,
-              colors: const [
-                AppColors.q1,
-                AppColors.q2,
-                AppColors.q3,
-                AppColors.leaf,
-                AppColors.pop,
+          ConfettiWidget(
+            confettiController: _confetti,
+            blastDirectionality: BlastDirectionality.explosive,
+            numberOfParticles: 16,
+            maxBlastForce: 14,
+            colors: const [
+              AppColors.q1,
+              AppColors.q2,
+              AppColors.q3,
+              AppColors.leaf,
+              AppColors.pop,
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: const BoxDecoration(
+                      color: AppColors.ink, shape: BoxShape.circle),
+                  child:
+                      const Icon(Icons.check, color: AppColors.leaf, size: 46),
+                ),
+                const SizedBox(height: 20),
+                const Text('连续天数 +1',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.4,
+                        color: AppColors.ink40)),
+                const SizedBox(height: 6),
+                Text('🔥 ${widget.streak}',
+                    style: const TextStyle(
+                        fontSize: 52, fontWeight: FontWeight.w700, height: 1)),
+                const SizedBox(height: 14),
+                const Text('做到了。这就是积累。',
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500)),
+                if (widget.pointsDelta != null) ...[
+                  const SizedBox(height: 10),
+                  Text('+${widget.pointsDelta} 分',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.pop)),
+                ],
               ],
             ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 110,
-                height: 110,
-                decoration: const BoxDecoration(
-                    color: AppColors.ink, shape: BoxShape.circle),
-                child: const Icon(Icons.check, color: AppColors.leaf, size: 56),
-              ),
-              const SizedBox(height: 24),
-              const Text('连续天数 +1',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.4,
-                      color: AppColors.ink40)),
-              const SizedBox(height: 6),
-              Text('🔥 ${widget.streak}',
-                  style: const TextStyle(
-                      fontSize: 64, fontWeight: FontWeight.w700, height: 1)),
-              const SizedBox(height: 18),
-              const Text('做到了。这就是积累。',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500)),
-              if (widget.pointsDelta != null) ...[
-                const SizedBox(height: 10),
-                Text('+${widget.pointsDelta} 分',
-                    style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.pop)),
-              ],
-            ],
           ),
         ],
       ),
