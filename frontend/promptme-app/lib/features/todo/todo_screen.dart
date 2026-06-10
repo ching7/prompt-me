@@ -131,7 +131,8 @@ class TodoScreen extends ConsumerWidget {
       tomatoEst: t.tomatoEst,
       onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
       onFocus: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => FocusScreen(taskId: t.id, taskTitle: title))),
+          builder: (_) =>
+              FocusScreen(taskId: t.id, taskTitle: title, tomatoEst: t.tomatoEst))),
     );
   }
 
