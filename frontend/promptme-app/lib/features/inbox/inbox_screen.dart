@@ -30,6 +30,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => CaptureSheet(
         onCapture: (text, domain) {
           ref.read(inboxControllerProvider).capture(text: text, domain: domain);
