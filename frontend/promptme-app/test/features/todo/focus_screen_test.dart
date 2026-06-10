@@ -29,6 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('完成'), findsOneWidget); // 完成态
+    expect(find.textContaining('+10 分'), findsOneWidget); // 积分反馈
     final t = await db.taskDao.getById(id);
     expect(t!.tomatoDone, 1);
   });
