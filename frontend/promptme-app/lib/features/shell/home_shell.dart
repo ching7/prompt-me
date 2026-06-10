@@ -43,22 +43,89 @@ class _HomeShellState extends State<HomeShell> {
         ],
       ),
       body: IndexedStack(index: _index, children: _screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.inbox_outlined),
-              selectedIcon: Icon(Icons.inbox),
-              label: '收件箱'),
-          NavigationDestination(
-              icon: Icon(Icons.checklist_outlined),
-              selectedIcon: Icon(Icons.checklist),
-              label: '待办'),
-          NavigationDestination(
-              icon: Icon(Icons.insights_outlined),
-              selectedIcon: Icon(Icons.insights),
-              label: '复盘'),
+      bottomNavigationBar: _TabBar(
+        index: _index,
+        onTap: (i) => setState(() => _index = i),
+      ),
+    );
+  }
+}
+
+/// 底部 Tab 栏：纸色卡底 + 顶部细指示条（取自高保真原型，替代 Material 默认胶囊）。
+class _TabBar extends StatelessWidget {
+  const _TabBar({required this.index, required this.onTap});
+  final int index;
+  final ValueChanged<int> onTap;
+
+  static const _items = [
+    (Icons.inbox_outlined, Icons.inbox, '收件箱'),
+    (Icons.checklist_outlined, Icons.checklist, '待办'),
+    (Icons.insights_outlined, Icons.insights, '复盘'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.card,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.ink20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              children: [
+                for (var i = 0; i < _items.length; i++)
+                  Expanded(child: _tab(i)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tab(int i) {
+    final on = index == i;
+    final (icon, selIcon, label) = _items[i];
+    final color = on ? AppColors.ink : AppColors.ink40;
+    return InkWell(
+      onTap: () => onTap(i),
+      child: Stack(
+        children: [
+          if (on)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  width: 28,
+                  height: 3,
+                  decoration: const BoxDecoration(
+                    color: AppColors.ink,
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(3)),
+                  ),
+                ),
+              ),
+            ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(on ? selIcon : icon, size: 23, color: color),
+                const SizedBox(height: 3),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
+              ],
+            ),
+          ),
         ],
       ),
     );

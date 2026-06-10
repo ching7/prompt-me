@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../state/inbox_controller.dart';
 import '../../state/providers.dart';
 import '../../widgets/animated_points.dart';
+import '../../widgets/app_fab.dart';
 import 'capture_sheet.dart';
 import 'inbox_card.dart';
 
@@ -43,10 +44,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final async = ref.watch(inboxProvider);
     final points = ref.watch(pointsProvider).value ?? 0;
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openCapture,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: AppFab(onPressed: _openCapture),
       body: SafeArea(
         child: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -61,14 +59,22 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [
+                    Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                       const Text('收件箱',
                           style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 8),
-                      Text('${all.length} 条待整理',
-                          style:
-                              TextStyle(color: AppColors.ink40, fontSize: 12)),
+                              fontSize: 25,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              color: AppColors.ink)),
+                      const SizedBox(width: 9),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text('${all.length} 条待整理',
+                            style: const TextStyle(
+                                color: AppColors.ink40,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
+                      ),
                       const Spacer(),
                       // ★ 总积分：捕获 +2 即时可见
                       Container(
@@ -121,9 +127,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
   Widget _filterBar() {
     return Row(children: [
-      Text('标签',
+      const Text('标签',
           style: TextStyle(
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: FontWeight.w700,
               color: AppColors.ink40)),
       const SizedBox(width: 8),
@@ -135,20 +141,44 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               for (final d in kDefaultDomains)
                 Padding(
                   padding: const EdgeInsets.only(right: 7),
-                  child: FilterChip(
-                    label: Text(d),
-                    selected: _domainFilter == d,
-                    avatar: CircleAvatar(
-                        radius: 5, backgroundColor: AppColors.domainColor(d)),
-                    onSelected: (sel) =>
-                        setState(() => _domainFilter = sel ? d : null),
-                  ),
+                  child: _domChip(d),
                 ),
             ],
           ),
         ),
       ),
     ]);
+  }
+
+  /// 领域过滤胶囊：纸2 底 + 色点 + 名（取自原型 .inbf-tag）；选中=墨底白字。
+  Widget _domChip(String d) {
+    final on = _domainFilter == d;
+    return GestureDetector(
+      onTap: () => setState(() => _domainFilter = on ? null : d),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+        decoration: BoxDecoration(
+          color: on ? AppColors.ink : AppColors.paper2,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: on ? AppColors.ink : AppColors.ink20),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+                shape: BoxShape.circle, color: AppColors.domainColor(d)),
+          ),
+          const SizedBox(width: 5),
+          Text(d,
+              style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: on ? Colors.white : AppColors.ink60)),
+        ]),
+      ),
+    );
   }
 
   Widget _bulkAddButton(List<int> ids) {
