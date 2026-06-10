@@ -105,12 +105,16 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   }
 
   Future<FailureReason?> _askReason(String title) {
-    return showModalBottomSheet<FailureReason>(
+    return showDialog<FailureReason>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => TooHardSheet(
-        taskTitle: title,
-        onReason: (r) => Navigator.of(context).pop(r),
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.paper,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: TooHardSheet(
+          taskTitle: title,
+          onReason: (r) => Navigator.of(context).pop(r),
+        ),
       ),
     );
   }
