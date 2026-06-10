@@ -35,15 +35,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _testing = false;
   String? _testResult;
   bool _testOk = false;
+  bool _aiEnabled = false;
 
   @override
   void initState() {
     super.initState();
-    final cfg = ref.read(settingsProvider).aiConfig;
+    final s = ref.read(settingsProvider);
+    final cfg = s.aiConfig;
     _aiKey.text = cfg.apiKey;
     _baseUrl.text = cfg.baseUrl ?? '';
     _model.text = cfg.model ?? '';
     _preset = _presetNameFor(_baseUrl.text);
+    _aiEnabled = s.aiEnabled;
   }
 
   @override
@@ -81,6 +84,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // ---- AI ----
+
+  /// 切 AI 总开关：即时存 + 失效缓存的 AiClient（下次按新 enabled 重建）。
+  Future<void> _toggleAi(bool v) async {
+    setState(() => _aiEnabled = v);
+    await ref.read(settingsProvider).setAiEnabled(v);
+    ref.invalidate(aiClientProvider);
+    _toast(v ? 'AI 已开启' : 'AI 已关闭（走本地兜底）');
+  }
 
   Future<void> _saveAi() async {
     await ref.read(settingsProvider).saveAi(
@@ -144,6 +155,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('启用 AI',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w700)),
+                      SizedBox(height: 2),
+                      Text('关闭后所有 AI 功能走本地兜底（不发网络请求）',
+                          style:
+                              TextStyle(fontSize: 12, color: AppColors.ink40)),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _aiEnabled,
+                  activeThumbColor: AppColors.leaf,
+                  onChanged: _toggleAi,
+                ),
+              ],
+            ),
+            const Divider(height: 18, color: AppColors.ink20),
             _fieldLabel('服务商'),
             Wrap(
               spacing: 8,
