@@ -1,17 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/ai/ai_models.dart';
 import '../../domain/review/review_stats.dart';
+import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
+import '../../state/review_controller.dart';
 import '../../theme/app_colors.dart';
+import '../today/widgets/ai_panel.dart';
 
-class ReviewScreen extends ConsumerWidget {
+class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({super.key});
+  @override
+  ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
+}
+
+class _ReviewScreenState extends ConsumerState<ReviewScreen> {
+  bool _loading = false;
+  List<ReviewItem>? _items;
+  String? _error;
+
+  Future<void> _generate() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final items = await ref.read(reviewControllerProvider).generate();
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = '$e';
+          _loading = false;
+        });
+      }
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final stats = ref.watch(reviewStatsProvider).value;
     final streak = ref.watch(streakProvider).value ?? 0;
     final points = ref.watch(pointsProvider).value ?? 0;
+    final aiActive = ref.watch(aiClientProvider).config.isActive;
 
     return Scaffold(
       backgroundColor: AppColors.paper,
@@ -24,9 +60,61 @@ class ReviewScreen extends ConsumerWidget {
             const SizedBox(height: 18),
             _sectionHeader('累计'),
             _backgroundCard(streak, points, stats),
+            const SizedBox(height: 18),
+            _sectionHeader('AI 复盘'),
+            _aiSection(aiActive),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _aiSection(bool aiActive) {
+    if (!aiActive) {
+      return _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('开启 AI 后可生成个性化复盘建议',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            SizedBox(height: 6),
+            Text('去右上角「设置」打开「启用 AI」并填 key',
+                style: TextStyle(fontSize: 12.5, color: AppColors.ink40)),
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _card(
+          child: Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _loading ? null : _generate,
+                  icon: _loading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.auto_awesome, size: 18),
+                  label: Text(_loading
+                      ? '正在复盘…'
+                      : (_items == null ? '生成 AI 复盘' : '重新生成')),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text('生成失败：$_error',
+                    style: const TextStyle(fontSize: 12.5, color: AppColors.q1)),
+              ],
+            ],
+          ),
+        ),
+        if (_items != null && !_loading) ReviewResultView(items: _items!),
+      ],
     );
   }
 

@@ -2,16 +2,23 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:promptme/data/database.dart';
 import 'package:promptme/features/shell/home_shell.dart';
+import 'package:promptme/state/integration_providers.dart';
 import 'package:promptme/state/providers.dart';
 
 void main() {
   testWidgets('三 Tab 默认在待办、收件箱有 FAB、可切到复盘', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
 
     await tester.pumpWidget(ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        sharedPrefsProvider.overrideWithValue(prefs),
+      ],
       child: const MaterialApp(home: HomeShell()),
     ));
     await tester.pumpAndSettle();
@@ -43,10 +50,15 @@ void main() {
   // 实际「点齿轮 → 打开设置屏」的导航由 web 手测验收（测试桩下 Drift 流 +
   // 设置屏 TextField 光标会让 settle 永不结束，导航断言在此环境不稳）。
   testWidgets('shell 顶栏有设置入口齿轮', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());
 
     await tester.pumpWidget(ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        sharedPrefsProvider.overrideWithValue(prefs),
+      ],
       child: const MaterialApp(home: HomeShell()),
     ));
     await tester.pump();
