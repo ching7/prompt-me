@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/enums.dart';
@@ -55,10 +56,19 @@ class TodayController {
     String micro;
     try {
       final ai = ref.read(aiClientProvider);
-      micro = ai.config.isActive
-          ? await ai.downgrade(taskTitle: title, reason: reason, level: level)
-          : Downgrade.localFallback(title, level);
-    } catch (_) {
+      if (ai.config.isActive) {
+        debugPrint('[AI] 降级·调用 AI（model=${ai.config.effectiveModel}）：'
+            '"$title" reason=${reason.label} level=$level');
+        micro =
+            await ai.downgrade(taskTitle: title, reason: reason, level: level);
+        debugPrint('[AI] 降级·AI 返回："$micro"');
+      } else {
+        debugPrint('[AI] 降级·未启用 AI（enabled=${ai.config.enabled} '
+            'hasKey=${ai.config.isConfigured}）→ 本地兜底');
+        micro = Downgrade.localFallback(title, level);
+      }
+    } catch (e) {
+      debugPrint('[AI] 降级·异常 → 回退本地兜底：$e');
       micro = Downgrade.localFallback(title, level);
     }
     await _db.taskDao.applyDowngrade(id, micro, level);

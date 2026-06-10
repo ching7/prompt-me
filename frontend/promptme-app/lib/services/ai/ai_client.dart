@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import '../../domain/ai/ai_models.dart';
 import '../../domain/ai/ai_prompts.dart';
@@ -62,8 +63,10 @@ class AiClient {
       ],
     };
 
+    debugPrint('[AI] POST ${config.endpoint} model=${config.effectiveModel}');
     final resp = await _client.post(config.endpoint,
         headers: headers, body: jsonEncode(body));
+    debugPrint('[AI] ← HTTP ${resp.statusCode}');
     if (resp.statusCode != 200) {
       throw Exception('AI 调用失败 HTTP ${resp.statusCode}: ${resp.body}');
     }
