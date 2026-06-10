@@ -27,17 +27,20 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   void _openCapture() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => CaptureSheet(
-        onCapture: (text, domain) {
-          ref.read(inboxControllerProvider).capture(text: text, domain: domain);
-          Navigator.of(context).pop();
-        },
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.paper,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: CaptureSheet(
+          onCapture: (text, domain) {
+            ref
+                .read(inboxControllerProvider)
+                .capture(text: text, domain: domain);
+            Navigator.of(context).pop();
+          },
+        ),
       ),
     );
   }
