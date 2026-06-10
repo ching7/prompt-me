@@ -4,6 +4,7 @@ import '../../data/database.dart';
 import '../../domain/domains.dart';
 import '../../domain/enums.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 import '../../state/inbox_controller.dart';
 import '../../state/providers.dart';
 import '../../widgets/animated_points.dart';
@@ -66,12 +67,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                      const Text('收件箱',
-                          style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
-                              color: AppColors.ink)),
+                      Text('收件箱',
+                          style: AppText.title(25, weight: FontWeight.w700)),
                       const SizedBox(width: 9),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/enums.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 
 /// 压缩版「太难了」：一句话标题 + 一行 P/A/M chip → onReason。
 class TooHardSheet extends StatelessWidget {
@@ -23,18 +24,12 @@ class TooHardSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text.rich(
-            TextSpan(children: [
+          Text.rich(
+            const TextSpan(children: [
               TextSpan(text: '太难了？'),
-              TextSpan(
-                  text: '我帮你变小',
-                  style: TextStyle(
-                      fontStyle: FontStyle.italic, color: AppColors.q3)),
+              TextSpan(text: '我帮你变小', style: TextStyle(color: AppColors.q3)),
             ]),
-            style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-                color: AppColors.ink),
+            style: AppText.title(22, weight: FontWeight.w500),
           ),
           const SizedBox(height: 6),
           Text('卡在哪——选一下，把「$taskTitle」降到 2 分钟：',

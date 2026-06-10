@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_text.dart';
 
 class CelebrationOverlay extends StatefulWidget {
   const CelebrationOverlay({
@@ -83,11 +84,8 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                     style: const TextStyle(
                         fontSize: 52, fontWeight: FontWeight.w700, height: 1)),
                 const SizedBox(height: 14),
-                const Text('做到了。这就是积累。',
-                    style: TextStyle(
-                        fontSize: 17,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w500)),
+                Text('做到了。这就是积累。',
+                    style: AppText.title(18, weight: FontWeight.w500)),
                 if (widget.pointsDelta != null) ...[
                   const SizedBox(height: 10),
                   Text('+${widget.pointsDelta} 分',
