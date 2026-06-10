@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/animated_points.dart';
 
 class StatsChip extends StatelessWidget {
   const StatsChip(
@@ -32,7 +33,8 @@ class StatsChip extends StatelessWidget {
                 fontSize: 12,
                 color: AppColors.q3)),
         _sep(),
-        Text('★$points',
+        AnimatedPoints(
+            points: points,
             style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12,

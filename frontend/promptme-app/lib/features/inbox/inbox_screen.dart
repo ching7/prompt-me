@@ -6,6 +6,7 @@ import '../../domain/enums.dart';
 import '../../theme/app_colors.dart';
 import '../../state/inbox_controller.dart';
 import '../../state/providers.dart';
+import '../../widgets/animated_points.dart';
 import 'capture_sheet.dart';
 import 'inbox_card.dart';
 
@@ -78,7 +79,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(color: AppColors.ink20),
                         ),
-                        child: Text('★$points',
+                        child: AnimatedPoints(
+                            points: points,
                             style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 12,
