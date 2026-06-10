@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/score/score_calculator.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
 
@@ -135,6 +136,10 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         const SizedBox(height: 16),
         const Text('番茄完成 +1',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        Text('+${ScoreCalculator.tomatoPoints} 分',
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.pop)),
         const SizedBox(height: 8),
         Text('该短休 5 分了 · ${widget.taskTitle}',
             style: TextStyle(fontSize: 13, color: AppColors.ink60)),

@@ -16,4 +16,7 @@ class TaskEventDao extends DatabaseAccessor<AppDatabase> with _$TaskEventDaoMixi
       (delete(taskEvents)..where((e) => e.taskId.equals(taskId))).go();
 
   Future<List<TaskEvent>> all() => select(taskEvents).get();
+
+  /// 流：任意事件写入即推新（总积分响应式重算用）。
+  Stream<List<TaskEvent>> watchAll() => select(taskEvents).watch();
 }

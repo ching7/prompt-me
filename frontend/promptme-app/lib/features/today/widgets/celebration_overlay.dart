@@ -7,9 +7,11 @@ class CelebrationOverlay extends StatefulWidget {
     super.key,
     required this.streak,
     required this.onDismiss,
+    this.pointsDelta,
   });
   final int streak;
   final VoidCallback onDismiss;
+  final int? pointsDelta;
 
   @override
   State<CelebrationOverlay> createState() => _CelebrationOverlayState();
@@ -84,6 +86,14 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                       fontSize: 20,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w500)),
+              if (widget.pointsDelta != null) ...[
+                const SizedBox(height: 10),
+                Text('+${widget.pointsDelta} 分',
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.pop)),
+              ],
             ],
           ),
         ],

@@ -4,7 +4,7 @@ import '../../domain/enums.dart';
 
 part 'task_dao.g.dart';
 
-@DriftAccessor(tables: [Tasks])
+@DriftAccessor(tables: [Tasks, TaskEvents])
 class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   TaskDao(super.db);
 
@@ -15,14 +15,22 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     required String title,
     String? domain,
     DateTime? scheduledDate,
-  }) =>
-      into(tasks).insert(TasksCompanion.insert(
-        title: title,
-        quadrant: Quadrant.importantUrgent, // 占位，UI 不用
-        source: TaskSource.capture,
-        domain: Value(domain),
-        scheduledDate: Value(scheduledDate),
-      ));
+  }) async {
+    final id = await into(tasks).insert(TasksCompanion.insert(
+      title: title,
+      quadrant: Quadrant.importantUrgent, // 占位，UI 不用
+      source: TaskSource.capture,
+      domain: Value(domain),
+      scheduledDate: Value(scheduledDate),
+    ));
+    // 捕获即正反馈：单点记 capture 事件（两个捕获入口都走这里）。
+    await into(taskEvents).insert(TaskEventsCompanion.insert(
+      taskId: id,
+      type: TaskEventType.capture,
+      createdAt: DateTime.now(),
+    ));
+    return id;
+  }
 
   /// 收件箱 = 无排期且待办，新→旧。
   Stream<List<Task>> watchInbox() => (select(tasks)
@@ -98,6 +106,12 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     final t = await getById(id);
     await (update(tasks)..where((x) => x.id.equals(id)))
         .write(TasksCompanion(tomatoDone: Value((t?.tomatoDone ?? 0) + 1)));
+    // 番茄完成即正反馈：记 tomato 事件。
+    await into(taskEvents).insert(TaskEventsCompanion.insert(
+      taskId: id,
+      type: TaskEventType.tomato,
+      createdAt: DateTime.now(),
+    ));
   }
 
   /// 设番茄预估数。

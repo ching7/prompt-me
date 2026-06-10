@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database.dart';
 import '../../domain/enums.dart';
+import '../../domain/score/score_calculator.dart';
 import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
@@ -35,12 +36,13 @@ class TodoScreen extends ConsumerWidget {
     );
   }
 
-  void _celebrate(BuildContext context, int streak) {
+  void _celebrate(BuildContext context, int streak, {int? pointsDelta}) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => CelebrationOverlay(
         streak: streak,
+        pointsDelta: pointsDelta,
         onDismiss: () => Navigator.of(ctx).maybePop(),
       ),
     );
@@ -61,6 +63,7 @@ class TodoScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(todoTodayProvider);
     final streak = ref.watch(streakProvider).value ?? 0;
+    final points = ref.watch(pointsProvider).value ?? 0;
     final ctl = ref.read(todoControllerProvider);
 
     return Scaffold(
@@ -87,7 +90,8 @@ class TodoScreen extends ConsumerWidget {
                     StatsChip(
                         streak: streak,
                         done: view.doneCount,
-                        total: view.totalCount),
+                        total: view.totalCount,
+                        points: points),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -152,7 +156,9 @@ class TodoScreen extends ConsumerWidget {
         if (dir == DismissDirection.endToStart) {
           await ctl.complete(t.id);
           final fresh = await ctl.currentStreak(); // 完成后即时值，避免显示旧 streak
-          if (context.mounted) _celebrate(context, fresh);
+          if (context.mounted) {
+            _celebrate(context, fresh, pointsDelta: ScoreCalculator.donePoints);
+          }
           return true; // 从今日待办移除（stream 会把它放进已完成）
         } else {
           final reason = await _askReason(context, title);

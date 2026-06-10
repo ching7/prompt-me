@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/fogg/streak_calculator.dart';
+import '../domain/score/score_calculator.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -21,4 +22,12 @@ final streakProvider = StreamProvider<int>((ref) {
   return db.taskDao
       .watchCompletionDays()
       .map((days) => StreakCalculator.currentStreak(days, date));
+});
+
+// 流式总积分：任意正向事件（捕获/完成/番茄）即时重算。
+final pointsProvider = StreamProvider<int>((ref) {
+  final db = ref.watch(databaseProvider);
+  return db.taskEventDao
+      .watchAll()
+      .map((events) => ScoreCalculator.total(events.map((e) => e.type)));
 });
