@@ -18,26 +18,26 @@ class TooHardSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 5,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-                color: AppColors.ink20,
-                borderRadius: BorderRadius.circular(5)),
+          const Text.rich(
+            TextSpan(children: [
+              TextSpan(text: '太难了？'),
+              TextSpan(
+                  text: '我帮你变小',
+                  style: TextStyle(
+                      fontStyle: FontStyle.italic, color: AppColors.q3)),
+            ]),
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink),
           ),
-          const Text('太难了？我帮你变小',
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.ink)),
           const SizedBox(height: 6),
-          Text('卡在哪——把「$taskTitle」降到 2 分钟：',
+          Text('卡在哪——选一下，把「$taskTitle」降到 2 分钟：',
               style: const TextStyle(fontSize: 12.5, color: AppColors.ink60)),
           const SizedBox(height: 14),
           Row(
