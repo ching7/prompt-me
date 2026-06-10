@@ -37,7 +37,9 @@ class AiClient {
     final text = await _complete(Downgrade.buildPrompt(
         taskTitle: taskTitle, reason: reason, level: level));
     final line = text.trim().split('\n').first.trim();
-    return line.isEmpty ? Downgrade.localFallback(taskTitle, level) : line;
+    return line.isEmpty
+        ? Downgrade.localFallback(taskTitle, reason, level)
+        : line;
   }
 
   /// 设置页「测试连接」用：发一条最小请求，成功返回 null，失败返回错误说明。

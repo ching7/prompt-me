@@ -4,11 +4,23 @@ import 'package:promptme/domain/fogg/downgrade.dart';
 
 void main() {
   test('local fallback shrinks deterministically by level', () {
-    final l1 = Downgrade.localFallback('完成项目周报', 1);
-    final l2 = Downgrade.localFallback('完成项目周报', 2);
+    final l1 = Downgrade.localFallback('完成项目周报', FailureReason.tired, 1);
+    final l2 = Downgrade.localFallback('完成项目周报', FailureReason.tired, 2);
     expect(l1, contains('2 分钟'));
     expect(l1, contains('完成项目周报'));
     expect(l1, isNot(equals(l2)));
+  });
+
+  test('local fallback 按福格要素分 M/A/P 三套（同层级互不相同、都含任务名）', () {
+    final a = Downgrade.localFallback('完成项目周报', FailureReason.tired, 1);
+    final m = Downgrade.localFallback('完成项目周报', FailureReason.noMotivation, 1);
+    final p = Downgrade.localFallback('完成项目周报', FailureReason.forgot, 1);
+
+    for (final s in [a, m, p]) {
+      expect(s, contains('完成项目周报'));
+    }
+    // 三套互不相同（对症不同要素）
+    expect({a, m, p}.length, 3);
   });
 
   test('prompt mentions task, reason and fogg factor', () {

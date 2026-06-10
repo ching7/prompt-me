@@ -1,13 +1,28 @@
 import '../enums.dart';
 
 class Downgrade {
-  /// AI 不可用时的确定性兜底；层级越高任务越小（无底线）。
-  static String localFallback(String taskTitle, int level) {
+  /// AI 不可用时的确定性兜底；按塌掉的福格要素分 M/A/P 三套，层级越高越小（无底线）。
+  static String localFallback(String taskTitle, FailureReason reason, int level) {
     final clean = taskTitle.trim();
-    return switch (level) {
-      <= 1 => '只打开《$clean》，做满 2 分钟就停。',
-      2 => '只看一眼《$clean》，读懂第一行就算赢。',
-      _ => '现在对《$clean》说一句「我等下做」，然后深呼吸一次。',
+    return switch (reason) {
+      // A 能力塌：砍到再累也能做。
+      FailureReason.tired => switch (level) {
+          <= 1 => '只打开《$clean》，做满 2 分钟就停。',
+          2 => '只看《$clean》第一行，读懂就算赢。',
+          _ => '把《$clean》第一个字写下来，就这一个字。',
+        },
+      // M 动机塌：小到不需要动力 + 即时好处。
+      FailureReason.noMotivation => switch (level) {
+          <= 1 => '在《$clean》上写一句话，写完你就已经起步了。',
+          2 => '给《$clean》做个 30 秒的最小动作，做完夸自己一句。',
+          _ => '先想一下《$clean》做完后的轻松，然后写一个字。',
+        },
+      // P 提示塌：绑一个明确触发锚点。
+      FailureReason.forgot => switch (level) {
+          <= 1 => '喝下一口水后，立刻打开《$clean》看一眼。',
+          2 => '放下手机后第一件事，就是点开《$clean》。',
+          _ => '现在给《$clean》设个 5 分钟后的提醒，到点做 1 分钟。',
+        },
     };
   }
 

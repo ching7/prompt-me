@@ -65,11 +65,11 @@ class TodayController {
       } else {
         debugPrint('[AI] 降级·未启用 AI（enabled=${ai.config.enabled} '
             'hasKey=${ai.config.isConfigured}）→ 本地兜底');
-        micro = Downgrade.localFallback(title, level);
+        micro = Downgrade.localFallback(title, reason, level);
       }
     } catch (e) {
       debugPrint('[AI] 降级·异常 → 回退本地兜底：$e');
-      micro = Downgrade.localFallback(title, level);
+      micro = Downgrade.localFallback(title, reason, level);
     }
     await _db.taskDao.applyDowngrade(id, micro, level);
     await _db.taskEventDao.log(TaskEventsCompanion.insert(
