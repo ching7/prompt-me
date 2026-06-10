@@ -29,10 +29,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(FloatingActionButton), findsOneWidget);
 
-    // 切到复盘
+    // 切到复盘 → 真复盘屏（非占位）
     await tester.tap(find.text('复盘'));
     await tester.pumpAndSettle();
-    expect(find.text('复盘 · 占位'), findsOneWidget);
+    expect(find.text('今日小结'), findsOneWidget);
 
     // 关闭 DB 再 unmount，避免 Drift stream 定时器在 widget 拆卸后残留
     await db.close();
