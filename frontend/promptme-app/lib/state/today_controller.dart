@@ -55,7 +55,7 @@ class TodayController {
     String micro;
     try {
       final ai = ref.read(aiClientProvider);
-      micro = ai.config.isConfigured
+      micro = ai.config.isActive
           ? await ai.downgrade(taskTitle: title, reason: reason, level: level)
           : Downgrade.localFallback(title, level);
     } catch (_) {
