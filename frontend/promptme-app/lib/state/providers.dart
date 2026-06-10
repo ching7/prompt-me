@@ -3,6 +3,7 @@ import '../data/database.dart';
 import '../domain/enums.dart';
 import '../domain/fogg/map_diagnosis.dart';
 import '../domain/fogg/streak_calculator.dart';
+import '../domain/review/review_stats.dart';
 import '../domain/score/score_calculator.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -42,4 +43,25 @@ final taskDiagnosisProvider =
       events
           .where((e) => e.type == TaskEventType.tooHard && e.reason != null)
           .map((e) => e.reason!)));
+});
+
+// 复盘数据汇总：今日完成/番茄/太难了 + 累计 MAP 主因（纯派生，响应式）。
+final reviewStatsProvider = StreamProvider<ReviewStats>((ref) {
+  final db = ref.watch(databaseProvider);
+  final today = ref.watch(selectedDateProvider);
+  bool isToday(DateTime d) =>
+      d.year == today.year && d.month == today.month && d.day == today.day;
+  return db.taskEventDao.watchAll().map((events) {
+    int todayOfType(TaskEventType t) =>
+        events.where((e) => e.type == t && isToday(e.createdAt)).length;
+    final mapOverall = MapDiagnosis.from(events
+        .where((e) => e.type == TaskEventType.tooHard && e.reason != null)
+        .map((e) => e.reason!));
+    return ReviewStats(
+      todayDone: todayOfType(TaskEventType.done),
+      todayTomato: todayOfType(TaskEventType.tomato),
+      todayTooHard: todayOfType(TaskEventType.tooHard),
+      mapOverall: mapOverall,
+    );
+  });
 });
