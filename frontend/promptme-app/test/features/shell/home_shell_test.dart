@@ -38,4 +38,22 @@ void main() {
     await db.close();
     await tester.pump();
   });
+
+  // 守护「设置屏曾是孤儿屏、没入口」这个回归：shell 顶栏必须有齿轮入口。
+  // 实际「点齿轮 → 打开设置屏」的导航由 web 手测验收（测试桩下 Drift 流 +
+  // 设置屏 TextField 光标会让 settle 永不结束，导航断言在此环境不稳）。
+  testWidgets('shell 顶栏有设置入口齿轮', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
+      child: const MaterialApp(home: HomeShell()),
+    ));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('open-settings')), findsOneWidget);
+
+    await db.close();
+    await tester.pump();
+  });
 }
