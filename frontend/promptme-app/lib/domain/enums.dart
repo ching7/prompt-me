@@ -51,4 +51,11 @@ enum FailureReason {
         FailureReason.tired => 'A',
         FailureReason.noMotivation => 'M',
       };
+
+  /// 塌掉的福格要素中文名（动机 M / 能力 A / 提示 P）。
+  String get foggFactorName => switch (this) {
+        FailureReason.forgot => '提示',
+        FailureReason.tired => '能力',
+        FailureReason.noMotivation => '动机',
+      };
 }

@@ -21,6 +21,12 @@ void main() {
     expect(FailureReason.noMotivation.foggFactor, 'M');
   });
 
+  test('FailureReason 映射到福格要素中文名（动机/能力/提示）', () {
+    expect(FailureReason.noMotivation.foggFactorName, '动机');
+    expect(FailureReason.tired.foggFactorName, '能力');
+    expect(FailureReason.forgot.foggFactorName, '提示');
+  });
+
   test('TaskSource.capture 追加在末尾、index=2', () {
     expect(TaskSource.values.length, 3);
     expect(TaskSource.capture.index, 2);
