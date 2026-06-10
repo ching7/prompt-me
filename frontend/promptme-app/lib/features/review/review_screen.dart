@@ -6,7 +6,6 @@ import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/review_controller.dart';
 import '../../theme/app_colors.dart';
-import '../today/widgets/ai_panel.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({super.key});
@@ -84,37 +83,56 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _card(
-          child: Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _loading ? null : _generate,
-                  icon: _loading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.auto_awesome, size: 18),
-                  label: Text(_loading
-                      ? '正在复盘…'
-                      : (_items == null ? '生成 AI 复盘' : '重新生成')),
-                ),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 10),
-                Text('生成失败：$_error',
-                    style: const TextStyle(fontSize: 12.5, color: AppColors.q1)),
-              ],
-            ],
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            onPressed: _loading ? null : _generate,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: Text(_items == null ? '生成 AI 复盘' : '重新生成'),
           ),
-        ),
-        if (_items != null && !_loading) ReviewResultView(items: _items!),
-      ],
+          if (_loading) ...[
+            const SizedBox(height: 12),
+            Row(children: const [
+              SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2)),
+              SizedBox(width: 10),
+              Text('正在复盘…',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.ink60)),
+            ]),
+          ],
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text('生成失败：$_error',
+                style: const TextStyle(fontSize: 12.5, color: AppColors.q1)),
+          ],
+          if (_items != null && !_loading) ...[
+            const SizedBox(height: 12),
+            if (_items!.isEmpty)
+              const Text('暂无挣扎中的任务，或数据还不够。',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.ink40))
+            else
+              ..._items!.map((i) => Padding(
+                    padding: const EdgeInsets.only(bottom: 9),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${i.taskTitle}（${i.foggFactor}）',
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text('${i.diagnosis} → ${i.suggestion}',
+                            style: const TextStyle(
+                                fontSize: 12.5, color: AppColors.ink60)),
+                      ],
+                    ),
+                  )),
+          ],
+        ],
+      ),
     );
   }
 

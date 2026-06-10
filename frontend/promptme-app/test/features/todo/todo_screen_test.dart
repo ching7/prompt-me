@@ -100,7 +100,7 @@ void main() {
     expect(find.textContaining('已完成'), findsOneWidget);
   });
 
-  testWidgets('AI 关闭时「AI 整理今日」→ 弹层显引导', (tester) async {
+  testWidgets('AI 关闭时「AI 整理」→ 内联显引导', (tester) async {
     SharedPreferences.setMockInitialValues({}); // AI 默认关
     final prefs = await SharedPreferences.getInstance();
     final db = AppDatabase(NativeDatabase.memory());

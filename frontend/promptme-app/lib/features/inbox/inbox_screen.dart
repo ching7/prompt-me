@@ -50,33 +50,48 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         error: (e, _) => Center(child: Text('出错了：$e')),
         data: (all) {
           final items = _filter(all);
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+          return Column(
             children: [
-              Row(children: [
-                const Text('收件箱',
-                    style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                const SizedBox(width: 8),
-                Text('${all.length} 条待整理',
-                    style: TextStyle(color: AppColors.ink40, fontSize: 12)),
-              ]),
-              const SizedBox(height: 12),
-              _filterBar(),
-              const SizedBox(height: 8),
-              if (items.isNotEmpty)
-                _bulkAddButton(items.map((t) => t.id).toList()),
-              const SizedBox(height: 6),
-              if (items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 40),
-                  child: Center(
-                    child: Text('收件箱空了 · 想到什么按 + 记一笔',
-                        style: TextStyle(color: AppColors.ink40)),
-                  ),
-                )
-              else
-                for (final t in items) _dismissibleCard(t),
+              // 固定顶栏：标题 + 标签过滤
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      const Text('收件箱',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 8),
+                      Text('${all.length} 条待整理',
+                          style:
+                              TextStyle(color: AppColors.ink40, fontSize: 12)),
+                    ]),
+                    const SizedBox(height: 12),
+                    _filterBar(),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
+                  children: [
+                    if (items.isNotEmpty)
+                      _bulkAddButton(items.map((t) => t.id).toList()),
+                    const SizedBox(height: 6),
+                    if (items.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 40),
+                        child: Center(
+                          child: Text('收件箱空了 · 想到什么按 + 记一笔',
+                              style: TextStyle(color: AppColors.ink40)),
+                        ),
+                      )
+                    else
+                      for (final t in items) _dismissibleCard(t),
+                  ],
+                ),
+              ),
             ],
           );
         },
