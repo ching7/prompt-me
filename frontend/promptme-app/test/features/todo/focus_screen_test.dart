@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promptme/data/database.dart';
+import 'package:promptme/domain/enums.dart';
 import 'package:promptme/features/todo/focus_screen.dart';
 import 'package:promptme/state/providers.dart';
 
@@ -62,6 +63,26 @@ void main() {
 
     expect(find.text('go'), findsOneWidget); // 已退回
     final t = await db.taskDao.getById(id);
-    expect(t!.tomatoDone, 0);
+    expect(t!.tomatoDone, 0); // 不计完成
+    final events = await db.taskEventDao.forTask(id);
+    expect(events.where((e) => e.type == TaskEventType.tomatoAbort).length, 1);
+  });
+
+  testWidgets('点预估「3」→ 任务 tomatoEst=3', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final id = await db.taskDao.insertCapture(title: 'A');
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
+      child: MaterialApp(
+        home: FocusScreen(taskId: id, taskTitle: 'A', workSeconds: 60),
+      ),
+    ));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('focus-est-3')));
+    await tester.pump();
+    expect((await db.taskDao.getById(id))!.tomatoEst, 3);
   });
 }

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database.dart';
+import '../../domain/ai/ai_models.dart';
 import '../../domain/enums.dart';
 import '../../domain/score/score_calculator.dart';
+import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
 import '../inbox/capture_sheet.dart';
+import '../today/widgets/ai_panel.dart';
 import '../today/widgets/celebration_overlay.dart';
 import 'stats_chip.dart';
 import 'focus_screen.dart';
@@ -35,6 +38,54 @@ class TodoScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// AI 整理今日：开 AI → 弹层显四象限建议；关 AI → 引导去设置。
+  void _openPrioritize(BuildContext context, WidgetRef ref) {
+    final active = ref.read(aiClientProvider).config.isActive;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        if (!active) return _aiOffHint();
+        return FutureBuilder<PrioritizeResult?>(
+          future: ref.read(todoControllerProvider).prioritizeToday(),
+          builder: (ctx, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Padding(
+                padding: EdgeInsets.all(40),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snap.hasError) {
+              return Padding(
+                padding: const EdgeInsets.all(22),
+                child: Text('整理失败：${snap.error}',
+                    style: const TextStyle(color: AppColors.q1)),
+              );
+            }
+            final r = snap.data;
+            if (r == null) return _aiOffHint();
+            return PrioritizeResultView(result: r);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _aiOffHint() => const Padding(
+        padding: EdgeInsets.all(22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('开启 AI 后可一键整理今日',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            SizedBox(height: 6),
+            Text('去右上角「设置」打开「启用 AI」并填 key',
+                style: TextStyle(fontSize: 12.5, color: AppColors.ink40)),
+          ],
+        ),
+      );
 
   void _celebrate(BuildContext context, int streak, {int? pointsDelta}) {
     showDialog(
@@ -94,7 +145,20 @@ class TodoScreen extends ConsumerWidget {
                         points: points),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('ai-prioritize'),
+                    onPressed: () => _openPrioritize(context, ref),
+                    icon: const Icon(Icons.auto_awesome, size: 16),
+                    label: const Text('AI 整理今日'),
+                    style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        foregroundColor: AppColors.ink60),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 _sectionHeader('★ 今日待办', '${view.pending.length} 件'),
                 if (view.pending.isEmpty)
                   _empty('今天还没排任务 · 按 + 加一件')
@@ -131,7 +195,8 @@ class TodoScreen extends ConsumerWidget {
       tomatoEst: t.tomatoEst,
       onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
       onFocus: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => FocusScreen(taskId: t.id, taskTitle: title))),
+          builder: (_) =>
+              FocusScreen(taskId: t.id, taskTitle: title, tomatoEst: t.tomatoEst))),
     );
   }
 

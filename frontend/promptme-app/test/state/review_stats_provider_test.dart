@@ -28,7 +28,7 @@ void main() {
     final c = ProviderContainer(
         overrides: [databaseProvider.overrideWithValue(db)]);
     addTearDown(c.dispose);
-    c.listen(reviewStatsProvider, (_, __) {}); // 保活，让 drift 流订阅并发射
+    c.listen(reviewStatsProvider, (_, _) {}); // 保活，让 drift 流订阅并发射
 
     final stats = await c.read(reviewStatsProvider.future);
     expect(stats.todayDone, 1);

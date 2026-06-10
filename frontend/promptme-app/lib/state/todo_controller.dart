@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
+import '../domain/ai/ai_models.dart';
 import '../domain/enums.dart';
 import '../domain/fogg/streak_calculator.dart';
 import '../domain/score/score_calculator.dart';
+import 'integration_providers.dart';
 import 'providers.dart';
 import 'today_controller.dart';
 
@@ -40,6 +43,37 @@ class TodoController {
 
   /// 完成一个番茄（+1 🍅）。
   Future<void> completeTomato(int id) => _db.taskDao.incrementTomato(id);
+
+  /// 设番茄预估数（1–4）。
+  Future<void> setTomatoEst(int id, int est) => _db.taskDao.setTomatoEst(id, est);
+
+  /// 放弃番茄：只记一条 tomatoAbort 事件（不计完成、不加分，留作 A 诊断信号）。
+  Future<void> abortTomato(int id) => _db.taskEventDao.log(
+        TaskEventsCompanion.insert(
+          taskId: id,
+          type: TaskEventType.tomatoAbort,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+  /// AI 整理今日：收集今日待办标题 → prioritize（四象限 + 今日先做）。关 AI 返回 null。
+  Future<PrioritizeResult?> prioritizeToday() async {
+    final ai = ref.read(aiClientProvider);
+    if (!ai.config.isActive) {
+      debugPrint('[AI] 整理·未启用 → 跳过');
+      return null;
+    }
+    final today = ref.read(selectedDateProvider);
+    final tasks = await _db.taskDao.tasksForDate(today);
+    final titles = tasks
+        .where((t) => t.status == TaskStatus.pending)
+        .map((t) => t.title)
+        .toList();
+    debugPrint('[AI] 整理·调用 prioritize（${titles.length} 条待办）');
+    final result = await ai.prioritize(taskTitles: titles, todayEvents: const []);
+    debugPrint('[AI] 整理·返回 ${result.suggestions.length} 条建议');
+    return result;
+  }
 
   /// 即时算当前连续天数（庆祝弹层用，避免读到完成前的旧值）。
   Future<int> currentStreak() async {

@@ -27,6 +27,11 @@ void main() {
     expect(FailureReason.forgot.foggFactorName, '提示');
   });
 
+  test('TaskEventType.tomatoAbort 追加在末尾、index=4', () {
+    expect(TaskEventType.tomatoAbort.index, 4);
+    expect(TaskEventType.values.length, 5);
+  });
+
   test('TaskSource.capture 追加在末尾、index=2', () {
     expect(TaskSource.values.length, 3);
     expect(TaskSource.capture.index, 2);

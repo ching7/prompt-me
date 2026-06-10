@@ -10,10 +10,12 @@ class FocusScreen extends ConsumerStatefulWidget {
     super.key,
     required this.taskId,
     required this.taskTitle,
+    this.tomatoEst,
     this.workSeconds = 25 * 60,
   });
   final int taskId;
   final String taskTitle;
+  final int? tomatoEst;
   final int workSeconds;
 
   @override
@@ -22,6 +24,7 @@ class FocusScreen extends ConsumerStatefulWidget {
 
 class _FocusScreenState extends ConsumerState<FocusScreen> {
   late int _remaining = widget.workSeconds;
+  late int? _est = widget.tomatoEst;
   Timer? _timer;
   bool _paused = false;
   bool _completed = false;
@@ -40,6 +43,18 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     _timer?.cancel();
     await ref.read(todoControllerProvider).completeTomato(widget.taskId);
     if (mounted) setState(() => _completed = true);
+  }
+
+  /// 放弃：记一条 tomatoAbort（不计完成/不加分），再退出。
+  Future<void> _abort() async {
+    _timer?.cancel();
+    await ref.read(todoControllerProvider).abortTomato(widget.taskId);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _setEst(int n) async {
+    setState(() => _est = n);
+    await ref.read(todoControllerProvider).setTomatoEst(widget.taskId, n);
   }
 
   @override
@@ -98,12 +113,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         Text(widget.taskTitle,
             style:
                 const TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 36),
+        const SizedBox(height: 22),
+        _estimateRow(),
+        const SizedBox(height: 28),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _abort,
               child: const Text('放弃'),
             ),
             const SizedBox(width: 16),
@@ -125,6 +142,49 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         Text('到点自动 +1 🍅 · 之后短休 5 分',
             style: TextStyle(fontSize: 11, color: AppColors.ink40)),
       ],
+    );
+  }
+
+  Widget _estimateRow() => Column(
+        children: [
+          Text(_est == null ? '预估几个 🍅？' : '预估 $_est 🍅',
+              style: const TextStyle(fontSize: 12, color: AppColors.ink40)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var n = 1; n <= 4; n++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: _estChip(n),
+                ),
+            ],
+          ),
+        ],
+      );
+
+  Widget _estChip(int n) {
+    final selected = _est == n;
+    return GestureDetector(
+      key: ValueKey('focus-est-$n'),
+      onTap: () => _setEst(n),
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: selected ? AppColors.q1 : AppColors.paper,
+          border: Border.all(
+              color: selected ? AppColors.q1 : AppColors.ink20, width: 1.5),
+        ),
+        child: Center(
+          child: Text('$n',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: selected ? Colors.white : AppColors.ink60)),
+        ),
+      ),
     );
   }
 
