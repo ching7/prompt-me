@@ -106,12 +106,17 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
           .write(TasksCompanion(tomatoEst: Value(est)));
 
   /// 所有已完成任务的「完成日期」集合（用于连续天数）。
-  Future<Set<DateTime>> completionDays() async {
-    final rows =
-        await (select(tasks)..where((t) => t.completedAt.isNotNull())).get();
-    return rows
-        .map((r) => r.completedAt!)
-        .map((d) => DateTime(d.year, d.month, d.day))
-        .toSet();
-  }
+  Future<Set<DateTime>> completionDays() async => _daysFrom(
+      await (select(tasks)..where((t) => t.completedAt.isNotNull())).get());
+
+  /// 同上，但作为流：完成/重开任务即时重算连续天数（修一次完成后 streak 滞后）。
+  Stream<Set<DateTime>> watchCompletionDays() =>
+      (select(tasks)..where((t) => t.completedAt.isNotNull()))
+          .watch()
+          .map(_daysFrom);
+
+  Set<DateTime> _daysFrom(List<Task> rows) => rows
+      .map((r) => r.completedAt!)
+      .map((d) => DateTime(d.year, d.month, d.day))
+      .toSet();
 }

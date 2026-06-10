@@ -9,6 +9,8 @@ class TodoCard extends StatelessWidget {
     required this.done,
     required this.overdue,
     required this.rolloverCount,
+    this.downgradeLevel = 0,
+    this.originTitle,
     required this.tomatoDone,
     required this.tomatoEst,
     required this.onToggle,
@@ -20,6 +22,8 @@ class TodoCard extends StatelessWidget {
   final bool done;
   final bool overdue;
   final int rolloverCount;
+  final int downgradeLevel;
+  final String? originTitle;
   final int tomatoDone;
   final int? tomatoEst;
   final VoidCallback onToggle;
@@ -28,20 +32,29 @@ class TodoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasDomain = domain != null && domain!.trim().isNotEmpty;
+    final downgraded = downgradeLevel > 0 && !done;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: downgraded ? AppColors.leaf.withValues(alpha: .06) : AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: overdue ? AppColors.q1.withValues(alpha: .38) : AppColors.ink20),
+            color: downgraded
+                ? AppColors.leaf.withValues(alpha: .45)
+                : overdue
+                    ? AppColors.q1.withValues(alpha: .38)
+                    : AppColors.ink20),
       ),
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(width: 4, color: AppColors.domainColor(domain)),
+            Container(
+                width: 4,
+                color: downgraded
+                    ? AppColors.leaf
+                    : AppColors.domainColor(domain)),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(11, 10, 13, 10),
@@ -66,6 +79,22 @@ class TodoCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (downgraded) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.leaf.withValues(alpha: .14),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text('🌱 微习惯 · 已降级 $downgradeLevel 次',
+                                  style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.leaf)),
+                            ),
+                            const SizedBox(height: 5),
+                          ],
                           Text(title,
                               style: TextStyle(
                                 fontSize: 14.5,
@@ -75,6 +104,12 @@ class TodoCard extends StatelessWidget {
                                     : null,
                                 color: done ? AppColors.ink40 : AppColors.ink,
                               )),
+                          if (downgraded && (originTitle?.trim().isNotEmpty ?? false)) ...[
+                            const SizedBox(height: 3),
+                            Text('来自原任务：$originTitle',
+                                style: TextStyle(
+                                    fontSize: 10.5, color: AppColors.ink40)),
+                          ],
                           const SizedBox(height: 6),
                           Row(children: [
                             if (hasDomain) ...[

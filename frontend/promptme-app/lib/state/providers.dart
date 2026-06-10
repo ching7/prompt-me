@@ -14,17 +14,11 @@ final selectedDateProvider = Provider<DateTime>((_) {
   return DateTime(n.year, n.month, n.day);
 });
 
-final streakProvider = FutureProvider.autoDispose<int>((ref) async {
+// 流式：完成/重开任务即时重算，避免「第一次完成 streak 仍显示 0」。
+final streakProvider = StreamProvider<int>((ref) {
   final db = ref.watch(databaseProvider);
   final date = ref.watch(selectedDateProvider);
-  ref.watch(_todayTasksProvider); // 任务变化时重算
-  final days = await db.taskDao.completionDays();
-  return StreakCalculator.currentStreak(days, date);
-});
-
-// 仅监听今日任务表，替代旧 todayViewProvider 的刷新作用。
-final _todayTasksProvider = StreamProvider.autoDispose<List<Task>>((ref) {
-  final db = ref.watch(databaseProvider);
-  final date = ref.watch(selectedDateProvider);
-  return db.taskDao.watchTasksForDate(date);
+  return db.taskDao
+      .watchCompletionDays()
+      .map((days) => StreakCalculator.currentStreak(days, date));
 });

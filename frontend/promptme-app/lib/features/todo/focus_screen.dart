@@ -112,8 +112,16 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 18),
-        Text('完成 +1 🍅 · 之后短休 5 分',
+        const SizedBox(height: 14),
+        TextButton(
+          key: const ValueKey('focus-complete'),
+          onPressed: _complete, // 提前完成：直接 +1 🍅，不必等满 25 分
+          child: Text('提前完成 +1 🍅',
+              style: TextStyle(
+                  fontWeight: FontWeight.w700, color: AppColors.leaf)),
+        ),
+        const SizedBox(height: 4),
+        Text('到点自动 +1 🍅 · 之后短休 5 分',
             style: TextStyle(fontSize: 11, color: AppColors.ink40)),
       ],
     );

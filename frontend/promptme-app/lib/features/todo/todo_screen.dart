@@ -95,7 +95,7 @@ class TodoScreen extends ConsumerWidget {
                 if (view.pending.isEmpty)
                   _empty('今天还没排任务 · 按 + 加一件')
                 else
-                  for (final t in view.pending) _pendingTile(context, ctl, t, streak),
+                  for (final t in view.pending) _pendingTile(context, ctl, t),
                 if (view.done.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _sectionHeader('已完成', '${view.done.length}'),
@@ -118,6 +118,8 @@ class TodoScreen extends ConsumerWidget {
       done: done,
       overdue: !done && t.rolloverCount > 0,
       rolloverCount: t.rolloverCount,
+      downgradeLevel: t.downgradeLevel,
+      originTitle: t.title,
       tomatoDone: t.tomatoDone,
       tomatoEst: t.tomatoEst,
       onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
@@ -126,8 +128,7 @@ class TodoScreen extends ConsumerWidget {
     );
   }
 
-  Widget _pendingTile(
-      BuildContext context, TodoController ctl, Task t, int streak) {
+  Widget _pendingTile(BuildContext context, TodoController ctl, Task t) {
     final title = (t.currentPromptText?.isNotEmpty ?? false)
         ? t.currentPromptText!
         : t.title;
@@ -135,7 +136,7 @@ class TodoScreen extends ConsumerWidget {
       key: ValueKey('todo-${t.id}'),
       background: Container(
         alignment: Alignment.centerLeft,
-        color: AppColors.q3, // 右滑 → 太难了
+        color: AppColors.q1, // 右滑 → 太难了（红）
         padding: const EdgeInsets.only(left: 20),
         child: const Text('太难了',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
@@ -150,7 +151,8 @@ class TodoScreen extends ConsumerWidget {
       confirmDismiss: (dir) async {
         if (dir == DismissDirection.endToStart) {
           await ctl.complete(t.id);
-          if (context.mounted) _celebrate(context, streak);
+          final fresh = await ctl.currentStreak(); // 完成后即时值，避免显示旧 streak
+          if (context.mounted) _celebrate(context, fresh);
           return true; // 从今日待办移除（stream 会把它放进已完成）
         } else {
           final reason = await _askReason(context, title);

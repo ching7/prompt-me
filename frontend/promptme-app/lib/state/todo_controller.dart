@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../domain/enums.dart';
+import '../domain/fogg/streak_calculator.dart';
 import 'providers.dart';
 import 'today_controller.dart';
 
@@ -38,6 +39,12 @@ class TodoController {
 
   /// 完成一个番茄（+1 🍅）。
   Future<void> completeTomato(int id) => _db.taskDao.incrementTomato(id);
+
+  /// 即时算当前连续天数（庆祝弹层用，避免读到完成前的旧值）。
+  Future<int> currentStreak() async {
+    final days = await _db.taskDao.completionDays();
+    return StreakCalculator.currentStreak(days, ref.read(selectedDateProvider));
+  }
 }
 
 final todoControllerProvider =
