@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../state/integration_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../inbox/inbox_screen.dart';
@@ -6,21 +8,39 @@ import '../review/review_screen.dart';
 import '../settings/settings_screen.dart';
 import '../todo/todo_screen.dart';
 
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 1; // 默认「待办」
 
   static const _screens = [InboxScreen(), TodoScreen(), ReviewScreen()];
   static const _titles = ['收件箱', '待办', '复盘'];
 
-  void _openSettings() => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-      );
+  @override
+  void initState() {
+    super.initState();
+    // App 运行期启动 ntfy 同步（若已配置 topic 且开了同步）。
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncCheck());
+  }
+
+  /// 按当前设置启停同步：开关开 + 有 topic → 订阅；否则停。
+  void _syncCheck() {
+    final s = ref.read(settingsProvider);
+    final svc = ref.read(ntfySyncServiceProvider);
+    if (s.syncActive) {
+      svc.start(s.ntfyTopic);
+    } else {
+      svc.stop();
+    }
+  }
+
+  void _openSettings() => Navigator.of(context)
+      .push(MaterialPageRoute(builder: (_) => const SettingsScreen()))
+      .then((_) => _syncCheck()); // 从设置返回后按新配置重启/停止同步
 
   @override
   Widget build(BuildContext context) {

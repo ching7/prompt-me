@@ -15,8 +15,9 @@ void main() {
     ));
     await tester.pump();
 
-    final sw = find.byType(Switch);
-    expect(sw, findsOneWidget);
+    // 两个开关：AI（第一个）+ 桌面同步。这里验 AI。
+    final sw = find.byType(Switch).first;
+    expect(find.byType(Switch), findsNWidgets(2));
     expect(tester.widget<Switch>(sw).value, false); // 默认关
 
     await tester.tap(sw);

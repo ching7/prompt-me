@@ -27,6 +27,10 @@ class InboxController {
     }
   }
 
+  /// 改标题（详情弹窗）。
+  Future<void> editTitle(int id, String title) =>
+      _db.taskDao.updateTitle(id, title);
+
   /// 删除条目（连带行为事件，与 TodayController.deleteTask 一致）。
   Future<void> delete(int id) async {
     await _db.taskEventDao.deleteForTask(id);

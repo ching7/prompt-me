@@ -6,6 +6,7 @@ import '../../domain/enums.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../state/inbox_controller.dart';
+import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../widgets/animated_points.dart';
 import '../../widgets/app_fab.dart';
@@ -102,7 +103,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 ),
               ),
               Expanded(
-                child: ListView(
+                child: RefreshIndicator(
+                  onRefresh: _resync,
+                  child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
                   children: [
                     if (items.isNotEmpty)
@@ -116,9 +120,12 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               style: TextStyle(color: AppColors.ink40)),
                         ),
                       )
-                    else
+                    else ...[
+                      _swipeHint(),
                       for (final t in items) _dismissibleCard(t),
+                    ],
                   ],
+                ),
                 ),
               ),
             ],
@@ -239,6 +246,114 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         title: t.title,
         domain: t.domain,
         subtitle: t.source == TaskSource.capture ? '💻 捕获' : '✍️ 手记',
+        onTap: () => _openDetail(t),
+      ),
+    );
+  }
+
+  /// 下拉刷新 = 强制 ntfy 续传兜底（列表本身响应式，这里主要催同步补漏）。
+  Future<void> _resync() async {
+    await ref.read(ntfySyncServiceProvider).resync();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+  }
+
+  /// 滑动手势提示（可发现性）。
+  Widget _swipeHint() => Padding(
+        padding: const EdgeInsets.only(bottom: 6, top: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('👈 左滑',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.leaf)),
+            Text(' 加入今日 · 点卡看详情 · 删除 ',
+                style: TextStyle(fontSize: 10.5, color: AppColors.ink40)),
+            Text('右滑 👉',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.q1)),
+          ],
+        ),
+      );
+
+  /// 点卡身 → 收件箱条目详情：编辑标题 + 删除 / 加入今日。
+  void _openDetail(Task t) {
+    final controller = TextEditingController(text: t.title);
+    showDialog(
+      context: context,
+      builder: (dctx) => Dialog(
+        backgroundColor: AppColors.paper,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('条目详情', style: AppText.title(20)),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                maxLines: null,
+                style: const TextStyle(fontSize: 14.5),
+                decoration: const InputDecoration(
+                  labelText: '标题',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                  '${t.domain ?? '未分类'} · ${t.source == TaskSource.capture ? '💻 捕获' : '✍️ 手记'}',
+                  style:
+                      const TextStyle(fontSize: 12, color: AppColors.ink60)),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      await ref.read(inboxControllerProvider).delete(t.id);
+                      if (dctx.mounted) Navigator.of(dctx).pop();
+                    },
+                    style: TextButton.styleFrom(foregroundColor: AppColors.q1),
+                    child: const Text('删除'),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () async {
+                      final txt = controller.text.trim();
+                      if (txt.isNotEmpty && txt != t.title) {
+                        await ref
+                            .read(inboxControllerProvider)
+                            .editTitle(t.id, txt);
+                      }
+                      if (dctx.mounted) Navigator.of(dctx).pop();
+                    },
+                    child: const Text('保存'),
+                  ),
+                  const SizedBox(width: 6),
+                  FilledButton(
+                    onPressed: () async {
+                      final txt = controller.text.trim();
+                      if (txt.isNotEmpty && txt != t.title) {
+                        await ref
+                            .read(inboxControllerProvider)
+                            .editTitle(t.id, txt);
+                      }
+                      await ref.read(inboxControllerProvider).addToToday(t.id);
+                      if (dctx.mounted) Navigator.of(dctx).pop();
+                    },
+                    child: const Text('加入今日'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

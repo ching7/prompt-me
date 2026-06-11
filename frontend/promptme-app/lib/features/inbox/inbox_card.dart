@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/tag_chip.dart';
 
 /// 收件箱单条卡：领域色标 + 标题 + meta（领域/未分类 · 来源 · 时间）。
 class InboxCard extends StatelessWidget {
@@ -8,16 +9,20 @@ class InboxCard extends StatelessWidget {
     required this.title,
     required this.domain,
     required this.subtitle,
+    this.onTap,
   });
 
   final String title;
   final String? domain;
   final String subtitle;
 
+  /// 点卡身 → 看详情/编辑。
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final hasDomain = domain != null && domain!.trim().isNotEmpty;
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -36,31 +41,23 @@ class InboxCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 主：任务内容（标题）在上
                     Text(title,
                         style: const TextStyle(
                             fontSize: 15.5, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
+                    // 次：标签 + 来源在下，与待办卡同款 TagChip
                     Row(children: [
-                      if (hasDomain) ...[
-                        CircleAvatar(
-                            radius: 3,
-                            backgroundColor: AppColors.domainColor(domain)),
-                        const SizedBox(width: 4),
-                        Text(domain!,
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.domainColor(domain))),
-                      ] else
-                        Text('未分类',
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.ink40)),
-                      const SizedBox(width: 9),
-                      Text(subtitle,
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.ink40)),
+                      Flexible(
+                        child: TagChip(
+                          text: hasDomain ? '🏷 ${domain!}' : '🏷 未分类',
+                          color: hasDomain
+                              ? AppColors.domainColor(domain)
+                              : AppColors.ink40,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      TagChip(text: subtitle, color: AppColors.ink40),
                     ]),
                   ],
                 ),
@@ -69,6 +66,12 @@ class InboxCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+    if (onTap == null) return card;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: card,
     );
   }
 }

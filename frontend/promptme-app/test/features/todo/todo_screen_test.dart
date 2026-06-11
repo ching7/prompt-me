@@ -100,6 +100,35 @@ void main() {
     expect(find.textContaining('已完成'), findsOneWidget);
   });
 
+  testWidgets('点卡身 → 详情弹窗改标题保存', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final c = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)]);
+    addTearDown(c.dispose);
+    await c.read(todoControllerProvider).addToday(text: '原标题');
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: const MaterialApp(home: TodoScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('原标题')); // 点卡身
+    // 弹窗含 TextField 光标动画 → 全程显式 pump，不用 pumpAndSettle
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('任务详情'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, '新标题');
+    await tester.tap(find.text('保存'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final tasks = await db.taskDao.tasksForDate(DateTime.now());
+    expect(tasks.any((t) => t.title == '新标题'), isTrue);
+  });
+
   testWidgets('AI 关闭时「AI 整理」→ 内联显引导', (tester) async {
     SharedPreferences.setMockInitialValues({}); // AI 默认关
     final prefs = await SharedPreferences.getInstance();

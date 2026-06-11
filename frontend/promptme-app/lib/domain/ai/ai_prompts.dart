@@ -20,6 +20,14 @@ $tasks
 只输出 JSON。''';
   }
 
+  static String estimateTomato(String taskTitle) {
+    return '''
+你是番茄工作法教练。一个番茄 = 25 分钟专注。
+任务：$taskTitle
+请估计完成它大约需要几个番茄（1 到 4 的整数，超过 4 也按 4 算）。
+只输出一个数字，不要任何其它文字。''';
+  }
+
   static String review({required List<String> overdueDescriptions}) {
     final list = overdueDescriptions.map((d) => '- $d').join('\n');
     return '''

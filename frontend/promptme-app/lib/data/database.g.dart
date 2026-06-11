@@ -492,6 +492,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
+  @override
+  late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -511,6 +520,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     domain,
     tomatoEst,
     tomatoDone,
+    syncId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -628,6 +638,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         tomatoDone.isAcceptableOrUnknown(data['tomato_done']!, _tomatoDoneMeta),
       );
     }
+    if (data.containsKey('sync_id')) {
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
+    }
     return context;
   }
 
@@ -711,6 +727,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.int,
         data['${effectivePrefix}tomato_done'],
       )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
     );
   }
 
@@ -745,6 +765,7 @@ class Task extends DataClass implements Insertable<Task> {
   final String? domain;
   final int? tomatoEst;
   final int tomatoDone;
+  final String? syncId;
   const Task({
     required this.id,
     this.projectId,
@@ -763,6 +784,7 @@ class Task extends DataClass implements Insertable<Task> {
     this.domain,
     this.tomatoEst,
     required this.tomatoDone,
+    this.syncId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -810,6 +832,9 @@ class Task extends DataClass implements Insertable<Task> {
       map['tomato_est'] = Variable<int>(tomatoEst);
     }
     map['tomato_done'] = Variable<int>(tomatoDone);
+    if (!nullToAbsent || syncId != null) {
+      map['sync_id'] = Variable<String>(syncId);
+    }
     return map;
   }
 
@@ -850,6 +875,9 @@ class Task extends DataClass implements Insertable<Task> {
           ? const Value.absent()
           : Value(tomatoEst),
       tomatoDone: Value(tomatoDone),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
     );
   }
 
@@ -886,6 +914,7 @@ class Task extends DataClass implements Insertable<Task> {
       domain: serializer.fromJson<String?>(json['domain']),
       tomatoEst: serializer.fromJson<int?>(json['tomatoEst']),
       tomatoDone: serializer.fromJson<int>(json['tomatoDone']),
+      syncId: serializer.fromJson<String?>(json['syncId']),
     );
   }
   @override
@@ -915,6 +944,7 @@ class Task extends DataClass implements Insertable<Task> {
       'domain': serializer.toJson<String?>(domain),
       'tomatoEst': serializer.toJson<int?>(tomatoEst),
       'tomatoDone': serializer.toJson<int>(tomatoDone),
+      'syncId': serializer.toJson<String?>(syncId),
     };
   }
 
@@ -936,6 +966,7 @@ class Task extends DataClass implements Insertable<Task> {
     Value<String?> domain = const Value.absent(),
     Value<int?> tomatoEst = const Value.absent(),
     int? tomatoDone,
+    Value<String?> syncId = const Value.absent(),
   }) => Task(
     id: id ?? this.id,
     projectId: projectId.present ? projectId.value : this.projectId,
@@ -960,6 +991,7 @@ class Task extends DataClass implements Insertable<Task> {
     domain: domain.present ? domain.value : this.domain,
     tomatoEst: tomatoEst.present ? tomatoEst.value : this.tomatoEst,
     tomatoDone: tomatoDone ?? this.tomatoDone,
+    syncId: syncId.present ? syncId.value : this.syncId,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
@@ -998,6 +1030,7 @@ class Task extends DataClass implements Insertable<Task> {
       tomatoDone: data.tomatoDone.present
           ? data.tomatoDone.value
           : this.tomatoDone,
+      syncId: data.syncId.present ? data.syncId.value : this.syncId,
     );
   }
 
@@ -1020,7 +1053,8 @@ class Task extends DataClass implements Insertable<Task> {
           ..write('downgradeLevel: $downgradeLevel, ')
           ..write('domain: $domain, ')
           ..write('tomatoEst: $tomatoEst, ')
-          ..write('tomatoDone: $tomatoDone')
+          ..write('tomatoDone: $tomatoDone, ')
+          ..write('syncId: $syncId')
           ..write(')'))
         .toString();
   }
@@ -1044,6 +1078,7 @@ class Task extends DataClass implements Insertable<Task> {
     domain,
     tomatoEst,
     tomatoDone,
+    syncId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1065,7 +1100,8 @@ class Task extends DataClass implements Insertable<Task> {
           other.downgradeLevel == this.downgradeLevel &&
           other.domain == this.domain &&
           other.tomatoEst == this.tomatoEst &&
-          other.tomatoDone == this.tomatoDone);
+          other.tomatoDone == this.tomatoDone &&
+          other.syncId == this.syncId);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
@@ -1086,6 +1122,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<String?> domain;
   final Value<int?> tomatoEst;
   final Value<int> tomatoDone;
+  final Value<String?> syncId;
   const TasksCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
@@ -1104,6 +1141,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.domain = const Value.absent(),
     this.tomatoEst = const Value.absent(),
     this.tomatoDone = const Value.absent(),
+    this.syncId = const Value.absent(),
   });
   TasksCompanion.insert({
     this.id = const Value.absent(),
@@ -1123,6 +1161,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.domain = const Value.absent(),
     this.tomatoEst = const Value.absent(),
     this.tomatoDone = const Value.absent(),
+    this.syncId = const Value.absent(),
   }) : title = Value(title),
        quadrant = Value(quadrant),
        source = Value(source);
@@ -1144,6 +1183,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<String>? domain,
     Expression<int>? tomatoEst,
     Expression<int>? tomatoDone,
+    Expression<String>? syncId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1164,6 +1204,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (domain != null) 'domain': domain,
       if (tomatoEst != null) 'tomato_est': tomatoEst,
       if (tomatoDone != null) 'tomato_done': tomatoDone,
+      if (syncId != null) 'sync_id': syncId,
     });
   }
 
@@ -1185,6 +1226,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<String?>? domain,
     Value<int?>? tomatoEst,
     Value<int>? tomatoDone,
+    Value<String?>? syncId,
   }) {
     return TasksCompanion(
       id: id ?? this.id,
@@ -1204,6 +1246,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       domain: domain ?? this.domain,
       tomatoEst: tomatoEst ?? this.tomatoEst,
       tomatoDone: tomatoDone ?? this.tomatoDone,
+      syncId: syncId ?? this.syncId,
     );
   }
 
@@ -1269,6 +1312,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (tomatoDone.present) {
       map['tomato_done'] = Variable<int>(tomatoDone.value);
     }
+    if (syncId.present) {
+      map['sync_id'] = Variable<String>(syncId.value);
+    }
     return map;
   }
 
@@ -1291,7 +1337,8 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('downgradeLevel: $downgradeLevel, ')
           ..write('domain: $domain, ')
           ..write('tomatoEst: $tomatoEst, ')
-          ..write('tomatoDone: $tomatoDone')
+          ..write('tomatoDone: $tomatoDone, ')
+          ..write('syncId: $syncId')
           ..write(')'))
         .toString();
   }
@@ -1368,6 +1415,17 @@ class $TaskEventsTable extends TaskEvents
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _durationSecMeta = const VerificationMeta(
+    'durationSec',
+  );
+  @override
+  late final GeneratedColumn<int> durationSec = GeneratedColumn<int>(
+    'duration_sec',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1376,6 +1434,7 @@ class $TaskEventsTable extends TaskEvents
     reason,
     microVersionText,
     createdAt,
+    durationSec,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1417,6 +1476,15 @@ class $TaskEventsTable extends TaskEvents
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('duration_sec')) {
+      context.handle(
+        _durationSecMeta,
+        durationSec.isAcceptableOrUnknown(
+          data['duration_sec']!,
+          _durationSecMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1454,6 +1522,10 @@ class $TaskEventsTable extends TaskEvents
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      durationSec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_sec'],
+      ),
     );
   }
 
@@ -1477,6 +1549,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
   final FailureReason? reason;
   final String? microVersionText;
   final DateTime createdAt;
+  final int? durationSec;
   const TaskEvent({
     required this.id,
     required this.taskId,
@@ -1484,6 +1557,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
     this.reason,
     this.microVersionText,
     required this.createdAt,
+    this.durationSec,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1502,6 +1576,9 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
       map['micro_version_text'] = Variable<String>(microVersionText);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || durationSec != null) {
+      map['duration_sec'] = Variable<int>(durationSec);
+    }
     return map;
   }
 
@@ -1517,6 +1594,9 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
           ? const Value.absent()
           : Value(microVersionText),
       createdAt: Value(createdAt),
+      durationSec: durationSec == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationSec),
     );
   }
 
@@ -1536,6 +1616,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
       ),
       microVersionText: serializer.fromJson<String?>(json['microVersionText']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      durationSec: serializer.fromJson<int?>(json['durationSec']),
     );
   }
   @override
@@ -1552,6 +1633,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
       ),
       'microVersionText': serializer.toJson<String?>(microVersionText),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'durationSec': serializer.toJson<int?>(durationSec),
     };
   }
 
@@ -1562,6 +1644,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
     Value<FailureReason?> reason = const Value.absent(),
     Value<String?> microVersionText = const Value.absent(),
     DateTime? createdAt,
+    Value<int?> durationSec = const Value.absent(),
   }) => TaskEvent(
     id: id ?? this.id,
     taskId: taskId ?? this.taskId,
@@ -1571,6 +1654,7 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
         ? microVersionText.value
         : this.microVersionText,
     createdAt: createdAt ?? this.createdAt,
+    durationSec: durationSec.present ? durationSec.value : this.durationSec,
   );
   TaskEvent copyWithCompanion(TaskEventsCompanion data) {
     return TaskEvent(
@@ -1582,6 +1666,9 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
           ? data.microVersionText.value
           : this.microVersionText,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      durationSec: data.durationSec.present
+          ? data.durationSec.value
+          : this.durationSec,
     );
   }
 
@@ -1593,14 +1680,22 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
           ..write('type: $type, ')
           ..write('reason: $reason, ')
           ..write('microVersionText: $microVersionText, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('durationSec: $durationSec')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, taskId, type, reason, microVersionText, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    taskId,
+    type,
+    reason,
+    microVersionText,
+    createdAt,
+    durationSec,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1610,7 +1705,8 @@ class TaskEvent extends DataClass implements Insertable<TaskEvent> {
           other.type == this.type &&
           other.reason == this.reason &&
           other.microVersionText == this.microVersionText &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.durationSec == this.durationSec);
 }
 
 class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
@@ -1620,6 +1716,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
   final Value<FailureReason?> reason;
   final Value<String?> microVersionText;
   final Value<DateTime> createdAt;
+  final Value<int?> durationSec;
   const TaskEventsCompanion({
     this.id = const Value.absent(),
     this.taskId = const Value.absent(),
@@ -1627,6 +1724,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
     this.reason = const Value.absent(),
     this.microVersionText = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.durationSec = const Value.absent(),
   });
   TaskEventsCompanion.insert({
     this.id = const Value.absent(),
@@ -1635,6 +1733,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
     this.reason = const Value.absent(),
     this.microVersionText = const Value.absent(),
     required DateTime createdAt,
+    this.durationSec = const Value.absent(),
   }) : taskId = Value(taskId),
        type = Value(type),
        createdAt = Value(createdAt);
@@ -1645,6 +1744,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
     Expression<int>? reason,
     Expression<String>? microVersionText,
     Expression<DateTime>? createdAt,
+    Expression<int>? durationSec,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1653,6 +1753,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
       if (reason != null) 'reason': reason,
       if (microVersionText != null) 'micro_version_text': microVersionText,
       if (createdAt != null) 'created_at': createdAt,
+      if (durationSec != null) 'duration_sec': durationSec,
     });
   }
 
@@ -1663,6 +1764,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
     Value<FailureReason?>? reason,
     Value<String?>? microVersionText,
     Value<DateTime>? createdAt,
+    Value<int?>? durationSec,
   }) {
     return TaskEventsCompanion(
       id: id ?? this.id,
@@ -1671,6 +1773,7 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
       reason: reason ?? this.reason,
       microVersionText: microVersionText ?? this.microVersionText,
       createdAt: createdAt ?? this.createdAt,
+      durationSec: durationSec ?? this.durationSec,
     );
   }
 
@@ -1699,6 +1802,9 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (durationSec.present) {
+      map['duration_sec'] = Variable<int>(durationSec.value);
+    }
     return map;
   }
 
@@ -1710,7 +1816,8 @@ class TaskEventsCompanion extends UpdateCompanion<TaskEvent> {
           ..write('type: $type, ')
           ..write('reason: $reason, ')
           ..write('microVersionText: $microVersionText, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('durationSec: $durationSec')
           ..write(')'))
         .toString();
   }
@@ -2845,6 +2952,7 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<String?> domain,
       Value<int?> tomatoEst,
       Value<int> tomatoDone,
+      Value<String?> syncId,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
@@ -2865,6 +2973,7 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<String?> domain,
       Value<int?> tomatoEst,
       Value<int> tomatoDone,
+      Value<String?> syncId,
     });
 
 final class $$TasksTableReferences
@@ -2995,6 +3104,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<int> get tomatoDone => $composableBuilder(
     column: $table.tomatoDone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncId => $composableBuilder(
+    column: $table.syncId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3136,6 +3250,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProjectsTableOrderingComposer get projectId {
     final $$ProjectsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3235,6 +3354,9 @@ class $$TasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get syncId =>
+      $composableBuilder(column: $table.syncId, builder: (column) => column);
+
   $$ProjectsTableAnnotationComposer get projectId {
     final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -3329,6 +3451,7 @@ class $$TasksTableTableManager
                 Value<String?> domain = const Value.absent(),
                 Value<int?> tomatoEst = const Value.absent(),
                 Value<int> tomatoDone = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
                 projectId: projectId,
@@ -3347,6 +3470,7 @@ class $$TasksTableTableManager
                 domain: domain,
                 tomatoEst: tomatoEst,
                 tomatoDone: tomatoDone,
+                syncId: syncId,
               ),
           createCompanionCallback:
               ({
@@ -3367,6 +3491,7 @@ class $$TasksTableTableManager
                 Value<String?> domain = const Value.absent(),
                 Value<int?> tomatoEst = const Value.absent(),
                 Value<int> tomatoDone = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
                 projectId: projectId,
@@ -3385,6 +3510,7 @@ class $$TasksTableTableManager
                 domain: domain,
                 tomatoEst: tomatoEst,
                 tomatoDone: tomatoDone,
+                syncId: syncId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3471,6 +3597,7 @@ typedef $$TaskEventsTableCreateCompanionBuilder =
       Value<FailureReason?> reason,
       Value<String?> microVersionText,
       required DateTime createdAt,
+      Value<int?> durationSec,
     });
 typedef $$TaskEventsTableUpdateCompanionBuilder =
     TaskEventsCompanion Function({
@@ -3480,6 +3607,7 @@ typedef $$TaskEventsTableUpdateCompanionBuilder =
       Value<FailureReason?> reason,
       Value<String?> microVersionText,
       Value<DateTime> createdAt,
+      Value<int?> durationSec,
     });
 
 final class $$TaskEventsTableReferences
@@ -3541,6 +3669,11 @@ class $$TaskEventsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$TasksTableFilterComposer get taskId {
     final $$TasksTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3599,6 +3732,11 @@ class $$TaskEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TasksTableOrderingComposer get taskId {
     final $$TasksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3648,6 +3786,11 @@ class $$TaskEventsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get durationSec => $composableBuilder(
+    column: $table.durationSec,
+    builder: (column) => column,
+  );
 
   $$TasksTableAnnotationComposer get taskId {
     final $$TasksTableAnnotationComposer composer = $composerBuilder(
@@ -3707,6 +3850,7 @@ class $$TaskEventsTableTableManager
                 Value<FailureReason?> reason = const Value.absent(),
                 Value<String?> microVersionText = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int?> durationSec = const Value.absent(),
               }) => TaskEventsCompanion(
                 id: id,
                 taskId: taskId,
@@ -3714,6 +3858,7 @@ class $$TaskEventsTableTableManager
                 reason: reason,
                 microVersionText: microVersionText,
                 createdAt: createdAt,
+                durationSec: durationSec,
               ),
           createCompanionCallback:
               ({
@@ -3723,6 +3868,7 @@ class $$TaskEventsTableTableManager
                 Value<FailureReason?> reason = const Value.absent(),
                 Value<String?> microVersionText = const Value.absent(),
                 required DateTime createdAt,
+                Value<int?> durationSec = const Value.absent(),
               }) => TaskEventsCompanion.insert(
                 id: id,
                 taskId: taskId,
@@ -3730,6 +3876,7 @@ class $$TaskEventsTableTableManager
                 reason: reason,
                 microVersionText: microVersionText,
                 createdAt: createdAt,
+                durationSec: durationSec,
               ),
           withReferenceMapper: (p0) => p0
               .map(

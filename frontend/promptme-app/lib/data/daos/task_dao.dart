@@ -32,6 +32,42 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     return id;
   }
 
+  /// ntfy 同步落库（幂等）：syncId 已存在 → 跳过返回 false；否则插入 capture 返回 true。
+  /// [toToday] 为真则进今日（scheduledDate=今天），否则进收件箱。
+  Future<bool> insertSyncedCaptureIfNew({
+    required String syncId,
+    required String title,
+    String? domain,
+    bool toToday = false,
+  }) async {
+    final exists = await (select(tasks)
+          ..where((t) => t.syncId.equals(syncId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (exists != null) return false; // 幂等：同 id 不重复落库
+
+    final scheduled = toToday
+        ? () {
+            final n = DateTime.now();
+            return DateTime(n.year, n.month, n.day);
+          }()
+        : null;
+    final id = await into(tasks).insert(TasksCompanion.insert(
+      title: title,
+      quadrant: Quadrant.importantUrgent,
+      source: TaskSource.capture,
+      domain: Value(domain),
+      scheduledDate: Value(scheduled),
+      syncId: Value(syncId),
+    ));
+    await into(taskEvents).insert(TaskEventsCompanion.insert(
+      taskId: id,
+      type: TaskEventType.capture,
+      createdAt: DateTime.now(),
+    ));
+    return true;
+  }
+
   /// 收件箱 = 无排期且待办，新→旧。
   Stream<List<Task>> watchInbox() => (select(tasks)
         ..where((t) =>
@@ -100,6 +136,11 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   Future<void> setDomain(int id, String? domain) =>
       (update(tasks)..where((t) => t.id.equals(id)))
           .write(TasksCompanion(domain: Value(domain)));
+
+  /// 改标题（详情弹窗编辑用）。
+  Future<void> updateTitle(int id, String title) =>
+      (update(tasks)..where((t) => t.id.equals(id)))
+          .write(TasksCompanion(title: Value(title)));
 
   /// 完成一个番茄：tomatoDone += 1。
   Future<void> incrementTomato(int id) async {

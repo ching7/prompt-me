@@ -9,11 +9,24 @@ class SettingsController {
   static const _kBaseUrl = 'ai_base_url';
   static const _kModel = 'ai_model';
   static const _kEnabled = 'ai_enabled';
+  static const _kNtfyTopic = 'ntfy_topic';
+  static const _kSyncEnabled = 'sync_enabled';
 
   /// AI 总开关，默认关（不开启就保持现状）。
   bool get aiEnabled => _prefs.getBool(_kEnabled) ?? false;
 
   Future<void> setAiEnabled(bool v) => _prefs.setBool(_kEnabled, v);
+
+  /// 桌面同步（ntfy 单向）：topic + 开关。默认关。
+  String get ntfyTopic => _prefs.getString(_kNtfyTopic) ?? '';
+  bool get syncEnabled => _prefs.getBool(_kSyncEnabled) ?? false;
+
+  /// 真正会订阅的条件：开关开 且 有 topic。
+  bool get syncActive => syncEnabled && ntfyTopic.trim().isNotEmpty;
+
+  Future<void> setNtfyTopic(String t) =>
+      _prefs.setString(_kNtfyTopic, t.trim());
+  Future<void> setSyncEnabled(bool v) => _prefs.setBool(_kSyncEnabled, v);
 
   AiConfig get aiConfig => AiConfig(
         apiKey: _prefs.getString(_kKey) ?? '',

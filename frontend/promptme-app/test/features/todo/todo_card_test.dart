@@ -21,7 +21,7 @@ void main() {
       ),
     ));
     expect(find.text('写 Java 代码'), findsOneWidget);
-    expect(find.text('工作'), findsOneWidget);
+    expect(find.textContaining('工作'), findsOneWidget); // 🏷 工作（便签 chip）
     await tester.tap(find.byKey(const ValueKey('todo-toggle')));
     expect(toggled, true);
   });
@@ -92,5 +92,47 @@ void main() {
 
     await tester.pumpWidget(card());
     expect(find.textContaining('🩺'), findsNothing);
+  });
+
+  testWidgets('可操作番茄 chip 显 ▶ 图标（与只读提示 chip 区分）', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: TodoCard(
+          title: 'A',
+          domain: '工作',
+          done: false,
+          overdue: false,
+          rolloverCount: 0,
+          tomatoDone: 0,
+          tomatoEst: null,
+          onToggle: () {},
+          onFocus: () {},
+        ),
+      ),
+    ));
+    // 番茄是唯一可操作 chip → 实底带 ▶；便签/领域只读 → 无 ▶
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+  });
+
+  testWidgets('点卡身（非勾选/非番茄）→ onTap 回调', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: TodoCard(
+          title: '写 Java 代码',
+          domain: '工作',
+          done: false,
+          overdue: false,
+          rolloverCount: 0,
+          tomatoDone: 0,
+          tomatoEst: null,
+          onToggle: () {},
+          onFocus: () {},
+          onTap: () => tapped = true,
+        ),
+      ),
+    ));
+    await tester.tap(find.text('写 Java 代码')); // 点标题=点卡身
+    expect(tapped, true);
   });
 }

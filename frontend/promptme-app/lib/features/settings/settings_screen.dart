@@ -1,23 +1,11 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/ai/ai_client.dart';
 import '../../services/ai/ai_config.dart';
 import '../../state/integration_providers.dart';
 import '../../theme/app_colors.dart';
-
-/// OpenAI 兼容服务商预设：点一下自动填 Base URL（与模型）。
-class _AiPreset {
-  final String name;
-  final String baseUrl;
-  final String model;
-  const _AiPreset(this.name, this.baseUrl, this.model);
-}
-
-const _aiPresets = <_AiPreset>[
-  _AiPreset('讯飞星火', 'https://maas-api.cn-huabei-1.xf-yun.com/v1', ''),
-  _AiPreset('DeepSeek', 'https://api.deepseek.com', 'deepseek-chat'),
-  _AiPreset('Qwen', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'qwen-plus'),
-];
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -31,11 +19,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _model = TextEditingController();
 
   bool _obscureKey = true;
-  String _preset = '自定义';
   bool _testing = false;
   String? _testResult;
   bool _testOk = false;
   bool _aiEnabled = false;
+
+  // ---- 桌面同步（ntfy） ----
+  final _ntfyTopic = TextEditingController();
+  bool _syncEnabled = false;
 
   @override
   void initState() {
@@ -45,8 +36,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _aiKey.text = cfg.apiKey;
     _baseUrl.text = cfg.baseUrl ?? '';
     _model.text = cfg.model ?? '';
-    _preset = _presetNameFor(_baseUrl.text);
     _aiEnabled = s.aiEnabled;
+    _ntfyTopic.text = s.ntfyTopic;
+    _syncEnabled = s.syncEnabled;
   }
 
   @override
@@ -54,6 +46,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _aiKey.dispose();
     _baseUrl.dispose();
     _model.dispose();
+    _ntfyTopic.dispose();
     super.dispose();
   }
 
@@ -61,26 +54,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
     }
-  }
-
-  String _presetNameFor(String url) {
-    final u = url.trim();
-    for (final p in _aiPresets) {
-      if (p.baseUrl == u) return p.name;
-    }
-    return '自定义';
-  }
-
-  void _selectPreset(String name) {
-    final match = _aiPresets.where((e) => e.name == name).toList();
-    setState(() {
-      _preset = name;
-      _testResult = null;
-      if (match.isNotEmpty) {
-        _baseUrl.text = match.first.baseUrl;
-        _model.text = match.first.model;
-      }
-    });
   }
 
   // ---- AI ----
@@ -134,6 +107,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
   }
 
+  // ---- 桌面同步（ntfy） ----
+
+  /// 应用同步设置：存 topic + 开关，并即时启停订阅。
+  Future<void> _applySync(bool enabled) async {
+    final s = ref.read(settingsProvider);
+    await s.setNtfyTopic(_ntfyTopic.text.trim());
+    await s.setSyncEnabled(enabled);
+    final svc = ref.read(ntfySyncServiceProvider);
+    if (s.syncActive) {
+      svc.start(s.ntfyTopic);
+    } else {
+      svc.stop();
+    }
+  }
+
+  Future<void> _toggleSync(bool v) async {
+    if (v && _ntfyTopic.text.trim().isEmpty) {
+      _genTopic(); // 开同步但没 topic → 自动生成一个
+    }
+    setState(() => _syncEnabled = v);
+    await _applySync(v);
+    _toast(v ? '同步已开启（订阅 topic）' : '同步已关闭');
+  }
+
+  Future<void> _saveSyncTopic() async {
+    await _applySync(_syncEnabled);
+    _toast('topic 已保存${_syncEnabled ? '，已按新 topic 订阅' : ''}');
+  }
+
+  /// 生成超长随机 topic（公共 ntfy 弱口令；敏感后再自托管）。
+  void _genTopic() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final r = Random();
+    final s = List.generate(20, (_) => chars[r.nextInt(chars.length)]).join();
+    setState(() => _ntfyTopic.text = 'promptme-$s');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,34 +152,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         children: [
           _aiCard(),
+          _syncCard(),
         ],
       ),
     );
   }
 
-  // ---------------- 卡片 ----------------
-
-  Widget _aiCard() => _card(
-        title: 'AI（自带 key）',
-        subtitle: '只兼容 OpenAI 协议。选服务商自动填 Base URL，再填 key。',
+  Widget _syncCard() => _card(
+        title: '桌面同步（ntfy）',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
+                const Expanded(
+                  child: Text('启用桌面同步',
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+                Switch(
+                  value: _syncEnabled,
+                  activeThumbColor: AppColors.leaf,
+                  onChanged: _toggleSync,
+                ),
+              ],
+            ),
+            const Divider(height: 18, color: AppColors.ink20),
+            _fieldLabel('Topic（手机与桌面一致）'),
+            TextField(
+              controller: _ntfyTopic,
+              decoration: _dec(
+                'promptme-超长随机串',
+                suffix: IconButton(
+                  tooltip: '复制',
+                  icon: const Icon(Icons.copy, size: 18, color: AppColors.ink40),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _ntfyTopic.text.trim()));
+                    _toast('已复制 topic');
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('启用 AI',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w700)),
-                      SizedBox(height: 2),
-                      Text('关闭后所有 AI 功能走本地兜底（不发网络请求）',
-                          style:
-                              TextStyle(fontSize: 12, color: AppColors.ink40)),
-                    ],
+                  child: OutlinedButton.icon(
+                    onPressed: _genTopic,
+                    icon: const Icon(Icons.casino_outlined, size: 18),
+                    label: const Text('随机生成'),
                   ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _saveSyncTopic,
+                    child: const Text('保存 topic'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text('公共 topic 公开可读，用随机串当口令。',
+                style: TextStyle(fontSize: 11.5, color: AppColors.ink40)),
+          ],
+        ),
+      );
+
+  // ---------------- 卡片 ----------------
+
+  Widget _aiCard() => _card(
+        title: '自定义 AI（OpenAI 协议）',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('启用 AI',
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
                 ),
                 Switch(
                   value: _aiEnabled,
@@ -179,23 +241,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
             const Divider(height: 18, color: AppColors.ink20),
-            _fieldLabel('服务商'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final p in _aiPresets) _presetChip(p.name),
-                _presetChip('自定义'),
-              ],
-            ),
-            const SizedBox(height: 16),
             _fieldLabel('Base URL'),
             TextField(
               controller: _baseUrl,
               keyboardType: TextInputType.url,
-              onChanged: (v) =>
-                  setState(() => _preset = _presetNameFor(v)),
-              decoration: _dec('https://…（讯飞可用 /v1 或 /v2）'),
+              decoration: _dec('https://api.deepseek.com'),
             ),
             const SizedBox(height: 14),
             _fieldLabel('API Key'),
@@ -217,8 +267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _fieldLabel('模型'),
             TextField(
               controller: _model,
-              decoration:
-                  _dec('留空用 deepseek-chat；讯飞填 MaaS 模型 ID（如 xdeepseekv3）'),
+              decoration: _dec('留空用 deepseek-chat'),
             ),
             if (_testResult != null) ...[
               const SizedBox(height: 12),
@@ -317,28 +366,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           borderSide: const BorderSide(color: AppColors.ink, width: 1.5),
         ),
       );
-
-  Widget _presetChip(String name) {
-    final selected = _preset == name;
-    return GestureDetector(
-      onTap: () => _selectPreset(name),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.paper,
-          borderRadius: BorderRadius.circular(999),
-          border:
-              Border.all(color: selected ? AppColors.ink : AppColors.ink20),
-        ),
-        child: Text(name,
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: selected ? AppColors.paper : AppColors.ink60)),
-      ),
-    );
-  }
 
   Widget _testBanner() {
     final color = _testOk ? AppColors.leaf : AppColors.q1;

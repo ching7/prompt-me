@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/score/score_calculator.dart';
+import '../../state/integration_providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
 
@@ -28,6 +29,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   Timer? _timer;
   bool _paused = false;
   bool _completed = false;
+  bool _aiEstimating = false;
 
   @override
   void initState() {
@@ -45,16 +47,33 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     if (mounted) setState(() => _completed = true);
   }
 
-  /// 放弃：记一条 tomatoAbort（不计完成/不加分），再退出。
+  /// 放弃：记一条 tomatoAbort（带已专注秒数 → 喂 MAP 二次诊断），再退出。
   Future<void> _abort() async {
     _timer?.cancel();
-    await ref.read(todoControllerProvider).abortTomato(widget.taskId);
+    final focusedSec = widget.workSeconds - _remaining; // 已专注时长
+    await ref
+        .read(todoControllerProvider)
+        .abortTomato(widget.taskId, focusedSec: focusedSec);
     if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _setEst(int n) async {
     setState(() => _est = n);
     await ref.read(todoControllerProvider).setTomatoEst(widget.taskId, n);
+  }
+
+  /// AI 估番茄（仅 AI 开时入口可见）：调模型 → 落库 → 回填选中。失败兜底已在 client 内。
+  Future<void> _aiEstimate() async {
+    setState(() => _aiEstimating = true);
+    final n = await ref
+        .read(todoControllerProvider)
+        .estimateTomato(widget.taskId, widget.taskTitle);
+    if (mounted) {
+      setState(() {
+        _aiEstimating = false;
+        if (n != null) _est = n;
+      });
+    }
   }
 
   @override
@@ -145,23 +164,45 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     );
   }
 
-  Widget _estimateRow() => Column(
-        children: [
-          Text(_est == null ? '预估几个 🍅？' : '预估 $_est 🍅',
-              style: const TextStyle(fontSize: 12, color: AppColors.ink40)),
+  Widget _estimateRow() {
+    final aiActive = ref.watch(aiClientProvider).config.isActive;
+    return Column(
+      children: [
+        Text(_est == null ? '预估几个 🍅？' : '预估 $_est 🍅',
+            style: const TextStyle(fontSize: 12, color: AppColors.ink40)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var n = 1; n <= 4; n++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                child: _estChip(n),
+              ),
+          ],
+        ),
+        // AI 估入口：仅 AI 开时出现；关 AI = 只能手选（保留现状）。
+        if (aiActive) ...[
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var n = 1; n <= 4; n++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: _estChip(n),
-                ),
-            ],
+          TextButton.icon(
+            key: const ValueKey('focus-ai-est'),
+            onPressed: _aiEstimating ? null : _aiEstimate,
+            icon: _aiEstimating
+                ? const SizedBox(
+                    width: 13,
+                    height: 13,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('✨', style: TextStyle(fontSize: 13)),
+            label: Text(_aiEstimating ? '估算中…' : 'AI 估🍅',
+                style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.q3)),
           ),
         ],
-      );
+      ],
+    );
+  }
 
   Widget _estChip(int n) {
     final selected = _est == n;

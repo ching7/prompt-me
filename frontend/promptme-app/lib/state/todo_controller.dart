@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
@@ -47,12 +48,32 @@ class TodoController {
   /// 设番茄预估数（1–4）。
   Future<void> setTomatoEst(int id, int est) => _db.taskDao.setTomatoEst(id, est);
 
-  /// 放弃番茄：只记一条 tomatoAbort 事件（不计完成、不加分，留作 A 诊断信号）。
-  Future<void> abortTomato(int id) => _db.taskEventDao.log(
+  /// 改任务标题（详情弹窗）。
+  Future<void> editTitle(int id, String title) =>
+      _db.taskDao.updateTitle(id, title);
+
+  /// AI 估番茄：开 AI → 调模型估 1–4 并落库；关 AI → 返回 null（不估，保留手选现状）。
+  Future<int?> estimateTomato(int id, String title) async {
+    final ai = ref.read(aiClientProvider);
+    if (!ai.config.isActive) {
+      debugPrint('[AI] 估🍅·未启用 → 跳过（保留手选）');
+      return null;
+    }
+    debugPrint('[AI] 估🍅·调用（$title）');
+    final n = await ai.estimateTomato(taskTitle: title);
+    await setTomatoEst(id, n);
+    debugPrint('[AI] 估🍅 → $n');
+    return n;
+  }
+
+  /// 放弃番茄：记一条 tomatoAbort 事件（不计完成、不加分）。
+  /// 带上**已专注秒数** [focusedSec] → 喂 MAP「二次诊断」（短放弃≈动机塌、半途≈能力塌）。
+  Future<void> abortTomato(int id, {int? focusedSec}) => _db.taskEventDao.log(
         TaskEventsCompanion.insert(
           taskId: id,
           type: TaskEventType.tomatoAbort,
           createdAt: DateTime.now(),
+          durationSec: Value(focusedSec),
         ),
       );
 

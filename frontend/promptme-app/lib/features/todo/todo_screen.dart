@@ -8,6 +8,7 @@ import '../../state/integration_providers.dart';
 import '../../state/providers.dart';
 import '../../state/todo_controller.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text.dart';
 import '../../widgets/ai_button.dart';
 import '../../widgets/app_fab.dart';
 import '../inbox/capture_sheet.dart';
@@ -92,6 +93,14 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         _aiError = null;
       });
 
+  /// 完成 + 庆祝（勾选框 / 左滑 同一套反馈，避免不一致）。
+  Future<void> _completeAndCelebrate(int id) async {
+    final ctl = ref.read(todoControllerProvider);
+    await ctl.complete(id);
+    final fresh = await ctl.currentStreak(); // 完成后即时值，避免显示旧 streak
+    if (mounted) _celebrate(fresh, pointsDelta: ScoreCalculator.donePoints);
+  }
+
   void _celebrate(int streak, {int? pointsDelta}) {
     showDialog(
       context: context,
@@ -157,21 +166,27 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
+                  child: RefreshIndicator(
+                    onRefresh: _resync,
+                    child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
                     children: [
                       if (_aiOpen) _aiPanel(),
                       _sectionHeader('★ 今日待办', '${view.pending.length} 件'),
                       if (view.pending.isEmpty)
                         _empty('今天还没排任务 · 按 + 加一件')
-                      else
+                      else ...[
+                        _swipeHint(),
                         for (final t in view.pending) _pendingTile(ctl, t),
+                      ],
                       if (view.done.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         _sectionHeader('已完成', '${view.done.length}'),
                         for (final t in view.done) _card(ctl, t, true),
                       ],
                     ],
+                  ),
                   ),
                 ),
               ],
@@ -181,6 +196,34 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       ),
     );
   }
+
+  /// 下拉刷新 = 强制 ntfy 续传兜底（列表本身响应式）。
+  Future<void> _resync() async {
+    await ref.read(ntfySyncServiceProvider).resync();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+  }
+
+  /// 滑动手势提示（可发现性）：点卡看详情 · 左滑做到了 · 右滑太难了。
+  Widget _swipeHint() => Padding(
+        padding: const EdgeInsets.only(bottom: 8, top: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('👈 左滑',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.leaf)),
+            Text(' 做到了 · 点卡看详情 · 太难了 ',
+                style: TextStyle(fontSize: 10.5, color: AppColors.ink40)),
+            Text('右滑 👉',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.q1)),
+          ],
+        ),
+      );
 
   Widget _aiButton() => AiButton(
         key: const ValueKey('ai-prioritize'),
@@ -239,6 +282,98 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         ),
       );
 
+  /// 点卡身 → 任务详情弹窗：看 meta + 可编辑标题。
+  void _openDetail(TodoController ctl, Task t, bool done, String shownTitle,
+      String? diagnosisLabel) {
+    final controller = TextEditingController(text: t.title);
+    showDialog(
+      context: context,
+      builder: (dctx) => Dialog(
+        backgroundColor: AppColors.paper,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('任务详情', style: AppText.title(20)),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                maxLines: null,
+                style: const TextStyle(fontSize: 14.5),
+                decoration: const InputDecoration(
+                  labelText: '标题',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 6, children: [
+                _metaChip('🏷 ${t.domain ?? '未分类'}'),
+                _metaChip(
+                    '🍅 ${t.tomatoDone}${t.tomatoEst != null ? '/${t.tomatoEst}' : ''}'),
+                if (t.downgradeLevel > 0) _metaChip('🌱 降级 ${t.downgradeLevel} 次'),
+                if (t.rolloverCount > 0) _metaChip('⏰ 推迟 ${t.rolloverCount} 次'),
+              ]),
+              if (t.downgradeLevel > 0 && shownTitle != t.title) ...[
+                const SizedBox(height: 8),
+                Text('当前微习惯：$shownTitle',
+                    style:
+                        const TextStyle(fontSize: 12, color: AppColors.ink60)),
+              ],
+              if (diagnosisLabel != null) ...[
+                const SizedBox(height: 6),
+                Text('🩺 $diagnosisLabel',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.pop)),
+              ],
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dctx).pop(),
+                    child: const Text('关闭'),
+                  ),
+                  const SizedBox(width: 6),
+                  FilledButton(
+                    onPressed: () async {
+                      final txt = controller.text.trim();
+                      if (txt.isNotEmpty && txt != t.title) {
+                        await ctl.editTitle(t.id, txt);
+                      }
+                      if (dctx.mounted) Navigator.of(dctx).pop();
+                    },
+                    child: const Text('保存'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _metaChip(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.paper2,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.ink20),
+        ),
+        child: Text(text,
+            style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink60)),
+      );
+
   Widget _card(TodoController ctl, Task t, bool done,
       {String? diagnosisLabel}) {
     final title =
@@ -254,7 +389,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       diagnosisLabel: diagnosisLabel,
       tomatoDone: t.tomatoDone,
       tomatoEst: t.tomatoEst,
-      onToggle: () => done ? ctl.reopen(t.id) : ctl.complete(t.id),
+      onToggle: () =>
+          done ? ctl.reopen(t.id) : _completeAndCelebrate(t.id),
+      onTap: () => _openDetail(ctl, t, done, title, diagnosisLabel),
       onFocus: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (_) =>
               FocusScreen(taskId: t.id, taskTitle: title, tomatoEst: t.tomatoEst))),
@@ -284,11 +421,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       ),
       confirmDismiss: (dir) async {
         if (dir == DismissDirection.endToStart) {
-          await ctl.complete(t.id);
-          final fresh = await ctl.currentStreak(); // 完成后即时值，避免显示旧 streak
-          if (mounted) {
-            _celebrate(fresh, pointsDelta: ScoreCalculator.donePoints);
-          }
+          await _completeAndCelebrate(t.id);
           return true; // 从今日待办移除（stream 会把它放进已完成）
         } else {
           final reason = await _askReason(title);

@@ -13,8 +13,8 @@ void main() {
       ),
     ));
     expect(find.text('研究 MCP 协议'), findsOneWidget);
-    expect(find.text('学习'), findsOneWidget);
+    expect(find.textContaining('学习'), findsOneWidget); // 🏷 学习
     expect(find.text('没标签'), findsOneWidget);
-    expect(find.text('未分类'), findsOneWidget);
+    expect(find.textContaining('未分类'), findsOneWidget); // 🏷 未分类
   });
 }

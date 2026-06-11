@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/tag_chip.dart';
 
 class TodoCard extends StatelessWidget {
   const TodoCard({
@@ -16,6 +17,7 @@ class TodoCard extends StatelessWidget {
     required this.tomatoEst,
     required this.onToggle,
     required this.onFocus,
+    this.onTap,
   });
 
   final String title;
@@ -33,11 +35,15 @@ class TodoCard extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onFocus;
 
+  /// 点卡身（非勾选框/非番茄）→ 看详情/编辑。
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final hasDomain = domain != null && domain!.trim().isNotEmpty;
     final downgraded = downgradeLevel > 0 && !done;
-    return Container(
+    final hasDiag = !done && diagnosisLabel != null;
+    final card = Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         color: downgraded ? AppColors.leaf.withValues(alpha: .06) : AppColors.card,
@@ -83,32 +89,7 @@ class TodoCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (downgraded) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.leaf.withValues(alpha: .14),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text('🌱 微习惯 · 已降级 $downgradeLevel 次',
-                                  style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.leaf)),
-                            ),
-                            const SizedBox(height: 5),
-                          ],
-                          if (!done && diagnosisLabel != null) ...[
-                            Row(children: [
-                              Text('🩺 $diagnosisLabel',
-                                  style: const TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.q1)),
-                            ]),
-                            const SizedBox(height: 5),
-                          ],
+                          // 主：任务内容（标题）在上
                           Text(title,
                               style: TextStyle(
                                 fontSize: 14.5,
@@ -118,63 +99,72 @@ class TodoCard extends StatelessWidget {
                                     : null,
                                 color: done ? AppColors.ink40 : AppColors.ink,
                               )),
-                          if (downgraded && (originTitle?.trim().isNotEmpty ?? false)) ...[
+                          if (downgraded &&
+                              (originTitle?.trim().isNotEmpty ?? false)) ...[
                             const SizedBox(height: 3),
                             Text('来自原任务：$originTitle',
                                 style: TextStyle(
                                     fontSize: 10.5, color: AppColors.ink40)),
                           ],
-                          const SizedBox(height: 6),
-                          Row(children: [
-                            if (hasDomain) ...[
-                              CircleAvatar(
-                                  radius: 3,
-                                  backgroundColor:
-                                      AppColors.domainColor(domain)),
-                              const SizedBox(width: 4),
-                              Text(domain!,
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.domainColor(domain))),
-                            ] else
-                              Text('未分类',
-                                  style: TextStyle(
-                                      fontSize: 11, color: AppColors.ink40)),
-                            if (overdue) ...[
-                              const SizedBox(width: 9),
-                              Text('⏰ 已推迟 $rolloverCount 次',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.q1)),
+                          if (overdue) ...[
+                            const SizedBox(height: 3),
+                            Text('⏰ 已推迟 $rolloverCount 次',
+                                style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.q1)),
+                          ],
+                          const SizedBox(height: 8),
+                          // 次：标签/按钮在下。左=便签/降级/ai分析(提示)，右=🍅番茄(可操作)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TagChip(
+                                      text:
+                                          hasDomain ? '🏷 ${domain!}' : '🏷 未分类',
+                                      color: hasDomain
+                                          ? AppColors.domainColor(domain)
+                                          : AppColors.ink40,
+                                    ),
+                                    if (downgraded) ...[
+                                      const SizedBox(width: 6),
+                                      TagChip(
+                                        text: '🌱 降级 $downgradeLevel 次',
+                                        color: AppColors.leaf,
+                                      ),
+                                    ],
+                                    if (hasDiag) ...[
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: TagChip(
+                                          text: '🩺 $diagnosisLabel',
+                                          color: AppColors.pop,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (!done) ...[
+                                const SizedBox(width: 8),
+                                TagChip(
+                                  key: const ValueKey('todo-focus'),
+                                  text:
+                                      '🍅 $tomatoDone${tomatoEst != null ? '/$tomatoEst' : ''}',
+                                  color: AppColors.q1,
+                                  onTap: onFocus,
+                                ),
+                              ],
                             ],
-                          ]),
+                          ),
                         ],
                       ),
                     ),
-                    if (!done) ...[
-                      const SizedBox(width: 8),
-                      InkWell(
-                        key: const ValueKey('todo-focus'),
-                        onTap: onFocus,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.q1Tint,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                              '🍅 $tomatoDone${tomatoEst != null ? '/$tomatoEst' : ''}',
-                              style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.q1)),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -182,6 +172,12 @@ class TodoCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+    if (onTap == null) return card;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: card,
     );
   }
 }

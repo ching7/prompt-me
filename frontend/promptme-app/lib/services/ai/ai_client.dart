@@ -6,13 +6,18 @@ import '../../domain/ai/ai_prompts.dart';
 import '../../domain/ai/ai_response_parser.dart';
 import '../../domain/enums.dart';
 import '../../domain/fogg/downgrade.dart';
+import '../../domain/fogg/tomato_estimator.dart';
+import 'ai_cache.dart';
 import 'ai_config.dart';
 
 class AiClient {
-  AiClient({required this.config, http.Client? client})
-      : _client = client ?? http.Client();
+  AiClient({required this.config, http.Client? client, AiCache? cache})
+      : _client = client ?? http.Client(),
+        // ignore: prefer_initializing_formals  (cache 是公开命名参，不能写成 this._cache)
+        _cache = cache;
   final AiConfig config;
   final http.Client _client;
+  final AiCache? _cache;
 
   Future<PrioritizeResult> prioritize({
     required List<String> taskTitles,
@@ -42,10 +47,21 @@ class AiClient {
         : line;
   }
 
+  /// 预估番茄数（1–4）。AI 解析失败/异常 → 本地启发式兜底，绝不抛给 UI。
+  Future<int> estimateTomato({required String taskTitle}) async {
+    try {
+      final text = await _complete(AiPrompts.estimateTomato(taskTitle));
+      return TomatoEstimator.parseOrLocal(text, taskTitle);
+    } catch (_) {
+      return TomatoEstimator.local(taskTitle);
+    }
+  }
+
   /// 设置页「测试连接」用：发一条最小请求，成功返回 null，失败返回错误说明。
+  /// 不走缓存（每次都要真打一发，验证凭据/连通）。
   Future<String?> testConnection() async {
     try {
-      await _complete('ping');
+      await _complete('ping', useCache: false);
       return null;
     } catch (e) {
       return e.toString();
@@ -53,7 +69,15 @@ class AiClient {
   }
 
   /// 统一的「给提示词、拿纯文本」，走 OpenAI 协议 `/chat/completions`。
-  Future<String> _complete(String prompt) async {
+  /// 命中缓存即省一次请求（按 prompt 文本去重）。
+  Future<String> _complete(String prompt, {bool useCache = true}) async {
+    if (useCache) {
+      final cached = _cache?.get(prompt);
+      if (cached != null) {
+        debugPrint('[AI] 命中缓存 → 省一次请求');
+        return cached;
+      }
+    }
     final headers = <String, String>{
       'content-type': 'application/json',
       'authorization': 'Bearer ${config.apiKey}',
@@ -74,7 +98,9 @@ class AiClient {
     }
     final json = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
     final choices = json['choices'] as List;
-    return ((choices.first as Map<String, dynamic>)['message']
+    final content = ((choices.first as Map<String, dynamic>)['message']
         as Map<String, dynamic>)['content'] as String;
+    if (useCache) _cache?.put(prompt, content);
+    return content;
   }
 }
