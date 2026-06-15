@@ -76,6 +76,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # 桌面端 tray 菜单栏图标（macOS 模板图，黑形状+alpha，系统自动适配亮/暗）。
+  assets:
+    - assets/tray_icon.png
+
   # 衬线标题字体：系统 Songti SC 子集（仅标题用字，~70KB），用于各屏大标题/弹窗标题。
   fonts:
     - family: Songti

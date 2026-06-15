@@ -30,7 +30,13 @@ class DesktopCaptureSender {
       'dest': toToday ? 'today' : 'inbox',
       'ts': ts.millisecondsSinceEpoch ~/ 1000,
     });
-    final resp = await _client.post(Uri.parse('https://ntfy.sh/$t'), body: payload);
-    return resp.statusCode >= 200 && resp.statusCode < 300;
+    try {
+      final resp =
+          await _client.post(Uri.parse('https://ntfy.sh/$t'), body: payload);
+      return resp.statusCode >= 200 && resp.statusCode < 300;
+    } catch (_) {
+      // 网络/DNS/代理失败：返回 false 让调用方提示，绝不向上抛崩 UI。
+      return false;
+    }
   }
 }

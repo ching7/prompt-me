@@ -136,7 +136,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     final ctl = ref.read(todoControllerProvider);
 
     return Scaffold(
-      floatingActionButton: AppFab(onPressed: _openAdd),
+      floatingActionButton: AppFab(heroTag: 'fab-todo', onPressed: _openAdd),
       body: SafeArea(
         child: async.when(
           loading: () => const Center(child: CircularProgressIndicator()),

@@ -52,7 +52,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final async = ref.watch(inboxProvider);
     final points = ref.watch(pointsProvider).value ?? 0;
     return Scaffold(
-      floatingActionButton: AppFab(onPressed: _openCapture),
+      floatingActionButton:
+          AppFab(heroTag: 'fab-inbox', onPressed: _openCapture),
       body: SafeArea(
         child: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
